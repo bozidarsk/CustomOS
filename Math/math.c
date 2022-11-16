@@ -26,9 +26,9 @@ float sqrt(const float x)
     return u.x;
 }
 
-float ln(const float x) { float n = x + 1; return n - (n*n / 2) + (n*n*n / 3) - (n*n*n*n / 4) + (n*n*n*n*n / 5) - (n*n*n*n*n*n / 6) + (n*n*n*n*n*n*n / 7) - (n*n*n*n*n*n*n*n / 8) + (n*n*n*n*n*n*n*n*n / 9) - (n*n*n*n*n*n*n*n*n*n / 10) + (n*n*n*n*n*n*n*n*n*n*n / 11) - (n*n*n*n*n*n*n*n*n*n*n*n / 12) + (n*n*n*n*n*n*n*n*n*n*n*n*n / 13) - (n*n*n*n*n*n*n*n*n*n*n*n*n*n / 14) + (n*n*n*n*n*n*n*n*n*n*n*n*n*n*n / 15) - (n*n*n*n*n*n*n*n*n*n*n*n*n*n*n*n / 16); }
-float log(const float x) { return ln(x) / ln(10); }
-float log(const float x, const float a) { return ln(x) / ln(a); }
+// float ln(const float x) { float n = x - 1; return n - (n*n / 2) + (n*n*n / 3) - (n*n*n*n / 4) + (n*n*n*n*n / 5) - (n*n*n*n*n*n / 6) + (n*n*n*n*n*n*n / 7) - (n*n*n*n*n*n*n*n / 8) + (n*n*n*n*n*n*n*n*n / 9) - (n*n*n*n*n*n*n*n*n*n / 10) + (n*n*n*n*n*n*n*n*n*n*n / 11) - (n*n*n*n*n*n*n*n*n*n*n*n / 12) + (n*n*n*n*n*n*n*n*n*n*n*n*n / 13) - (n*n*n*n*n*n*n*n*n*n*n*n*n*n / 14) + (n*n*n*n*n*n*n*n*n*n*n*n*n*n*n / 15) - (n*n*n*n*n*n*n*n*n*n*n*n*n*n*n*n / 16); }
+// float log(const float x) { return ln(x) / ln(10); }
+// float log(const float x, const float a) { return ln(x) / ln(a); }
 
 float sin(const float x) { return x - (x*x*x / 6) + (x*x*x*x*x / 120) - (x*x*x*x*x*x*x / 5040) + (x*x*x*x*x*x*x*x*x / 362880) - (x*x*x*x*x*x*x*x*x*x*x / 39916800) + (x*x*x*x*x*x*x*x*x*x*x*x*x / 6227020800) - (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 1307674368000) + (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 355687428096000) - (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 121645100408832000); }
 float cos(const float x) { return 1 - (x*x / 2) + (x*x*x*x / 24) - (x*x*x*x*x*x / 720) + (x*x*x*x*x*x*x*x / 40320) - (x*x*x*x*x*x*x*x*x*x / 3628800) + (x*x*x*x*x*x*x*x*x*x*x*x / 479001600) - (x*x*x*x*x*x*x*x*x*x*x*x*x*x / 87178291200) + (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 20922789888000) - (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 6402373705728000) + (x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x / 2432902008176640000); }
