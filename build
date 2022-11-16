@@ -1,0 +1,18 @@
+c="g++ -ffreestanding -fno-pie -m32 -I include -Wall -Wextra -g -c"
+asm="nasm -f elf32"
+
+$c Kernel/kernel.c -o bin/kernel.o
+$c Display/display.c -o bin/display.o
+$c Math/math.c -o bin/math.o
+$c Math/vectors.c -o bin/vectors.o
+$c Kernel/IO/io.c -o bin/io.o
+$c Kernel/IO/keyboard.c -o bin/keyboard.o
+$c Kernel/convert.c -o bin/convert.o
+$c Kernel/string.c -o bin/string.o
+
+$asm BootLoader/entry.s -o bin/boot/entry.o
+nasm BootLoader/loader.s -f bin -o bin/boot/loader.bin
+nasm BootLoader/zeros.s -f bin -o bin/boot/zeros.bin
+
+ld -Ttext 0x1000 -m elf_i386 bin/boot/entry.o bin/*.o --oformat binary -o bin/boot/kernel.bin
+cat bin/boot/loader.bin bin/boot/kernel.bin bin/boot/zeros.bin > bin/boot/boot.bin
