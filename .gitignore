@@ -1,4 +1,2 @@
 *.o
 *.bin
-!bin/
-!bin/boot
