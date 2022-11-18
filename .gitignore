@@ -1,4 +1,4 @@
-bin/*.o
-bin/*.bin
-bin/boot/*.o
-bin/boot/*.bin
+*.o
+*.bin
+!bin/
+!bin/boot
