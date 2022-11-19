@@ -1,0 +1,11 @@
+if [ $# -ne 1 ]; then
+echo compile/c $@
+exit
+fi
+
+IFS='/'
+read -a array <<< $1
+file=${array[-1]}
+file="${file}.exe"
+
+tybuild.exe /target:exe /unsafe "$1" /out:bin/$file

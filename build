@@ -12,24 +12,20 @@ else
 cd ../..
 fi
 
-c="g++ -ffreestanding -fno-pie -nostdlib -m32 -I include -Wall -Wextra -g -c"
-asm="nasm -f elf32"
+compile/c Kernel/kernel.c
+compile/c Display/display.c
+compile/c Math/math.c
+compile/c Math/vectors.c
+compile/c Kernel/IO/io.c
+compile/c Kernel/IO/keyboard.c
+compile/c Kernel/convert.c
+compile/c Kernel/string.c
+compile/c Kernel/Interrupts/interrupts.c
 
-$c Kernel/kernel.c
-$c Display/display.c
-$c Math/math.c
-$c Math/vectors.c
-$c Kernel/IO/io.c
-$c Kernel/IO/keyboard.c
-$c Kernel/convert.c
-$c Kernel/string.c
-$c Kernel/Interrupts/interrupts.c
+compile/asm Kernel/Interrupts/idt.asm
+compile/asm Kernel/Interrupts/isr.asm
 
-$asm Kernel/Interrupts/idt.asm -o bin/idt.o
-$asm Kernel/Interrupts/isr.asm -o bin/isr.o
-$asm BootLoader/entry.asm -o bin/boot/entry.o
-
-mv *.o bin/
+nasm -f elf32 BootLoader/entry.asm -o bin/boot/entry.o
 nasm BootLoader/loader.asm -f bin -o bin/boot/loader.bin
 nasm BootLoader/zeros.asm -f bin -o bin/boot/zeros.bin
 

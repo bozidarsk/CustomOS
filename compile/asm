@@ -1,0 +1,11 @@
+if [ $# -ne 1 ]; then
+echo compile/c $@
+exit
+fi
+
+IFS='/'
+read -a array <<< $1
+file=${array[-1]}
+file="${file}.o"
+
+nasm -f elf32 "$1" -o bin/$file
