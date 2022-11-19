@@ -25,9 +25,9 @@ $c Kernel/convert.c
 $c Kernel/string.c
 
 mv *.o bin/
-$asm BootLoader/entry.s -o bin/boot/entry.o
-nasm BootLoader/loader.s -f bin -o bin/boot/loader.bin
-nasm BootLoader/zeros.s -f bin -o bin/boot/zeros.bin
+$asm BootLoader/entry.asm -o bin/boot/entry.o
+nasm BootLoader/loader.asm -f bin -o bin/boot/loader.bin
+nasm BootLoader/zeros.asm -f bin -o bin/boot/zeros.bin
 
 ld -Ttext 0x1000 -m elf_i386 bin/boot/entry.o bin/*.o --oformat binary -o bin/boot/os.bin
 cat bin/boot/loader.bin bin/boot/os.bin bin/boot/zeros.bin > bin/boot/boot.bin
