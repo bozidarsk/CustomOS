@@ -1,4 +1,4 @@
-#include "vectors.h"
+#include <vectors.h>
 
 float4 f4(const float x, const float y, const float z, const float w) { float4 v = { x, y, z, w }; return v; }
 float3 f3(const float x, const float y, const float z) { float3 v = { x, y, z }; return v; }

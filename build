@@ -12,7 +12,7 @@ else
 cd ../..
 fi
 
-c="g++ -ffreestanding -fno-pie -m32 -I include -Wall -Wextra -g -c"
+c="g++ -ffreestanding -fno-pie -nostdlib -m32 -I include -Wall -Wextra -g -c"
 asm="nasm -f elf32"
 
 $c Kernel/kernel.c
@@ -23,9 +23,13 @@ $c Kernel/IO/io.c
 $c Kernel/IO/keyboard.c
 $c Kernel/convert.c
 $c Kernel/string.c
+$c Kernel/Interrupts/interrupts.c
+
+$asm Kernel/Interrupts/idt.asm -o bin/idt.o
+$asm Kernel/Interrupts/isr.asm -o bin/isr.o
+$asm BootLoader/entry.asm -o bin/boot/entry.o
 
 mv *.o bin/
-$asm BootLoader/entry.asm -o bin/boot/entry.o
 nasm BootLoader/loader.asm -f bin -o bin/boot/loader.bin
 nasm BootLoader/zeros.asm -f bin -o bin/boot/zeros.bin
 
