@@ -21,7 +21,7 @@ typedef enum
 
 void InitializeIDT();
 void InitializeISR();
-void EnableGate(int32 interrupt);
-void DisableGate(int32 interrupt);
+void EnableGate(uint32 interrupt);
+void DisableGate(uint32 interrupt);
 
 #endif

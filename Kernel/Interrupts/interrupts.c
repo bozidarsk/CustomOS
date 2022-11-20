@@ -29,8 +29,8 @@ void SetGate(int32 interrupt, void* base, uint16 segmentDesctiptor, uint8 flags)
 	table[interrupt].BaseHigh = (((uint32)base) >> 16) & 0xffff;
 }
 
-void EnableGate(int32 interrupt) { FLAG_SET(table[interrupt].Flags, IDT_FLAG_PRESENT); }
-void DisableGate(int32 interrupt) { FLAG_UNSET(table[interrupt].Flags, IDT_FLAG_PRESENT); }
+void EnableGate(uint32 interrupt) { FLAG_SET(table[interrupt].Flags, IDT_FLAG_PRESENT); }
+void DisableGate(uint32 interrupt) { FLAG_UNSET(table[interrupt].Flags, IDT_FLAG_PRESENT); }
 
 ASMCALL void LoadIDT(IDTDescriptor* desc);
 void InitializeIDT() { LoadIDT(&descriptor); }
@@ -49,11 +49,13 @@ typedef struct
 void InitializeISR() 
 {
 	#include "set/inits.inc"
-	for (int32 i = 0; i < 256; i++) { EnableGate(i); }
+	for (uint32 i = 0; i < 256; i++) { EnableGate(i); }
 }
 
-#include <display.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 ASMCALL void ISRHandler(Registers* registers) 
 {
 	
 }
+#pragma GCC diagnostic pop
