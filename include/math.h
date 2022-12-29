@@ -9,6 +9,8 @@
 #define GOLDEN_RATIO 1.6180339887498948482045868343657
 #define DEG2RAD 0.01745329251994329576923690768489
 #define RAD2DEG 57.295779513082320876798154814105
+#define LN10 2.30258509299
+#define LN2 0.69314718056
 
 float inverseLerp(const float a, const float b, const float x);
 float abs(const float x);
@@ -20,8 +22,12 @@ float ceiling(const float x);
 
 float sqrt(const float x);
 float ln(const float x);
-float log(const float x);
+float log2(const float x);
+float log10(const float x);
 float log(const float x, const float a);
+float pow(const float x, const float y);
+float pow10(const int32 x);
+float intpow(const float a, const int32 b);
 
 float sin(const float x);
 float cos(const float x);
@@ -32,7 +38,6 @@ float atan(const float x);
 float atan2(const float y, const float x);
 
 uint32 fact(const uint32 x);
-float pow10(const int32 x);
 float exp(const float x);
 float lerp(const float a, const float b, const float x);
 float2 lerp(const float2 a, const float2 b, const float2 x);
@@ -61,7 +66,6 @@ float2 MovePoint(const float2 a, const float2 b, const float _distance);
 float3 MovePoint01(const float3 a, const float3 b, const float _distance);
 float2 MovePoint01(const float2 a, const float2 b, const float _distance);
 
-bool IsPrime(const uint32 a);
-float pow(const float a, const float b);
+bool IsPrime(const uint32 x);
 
 #endif
