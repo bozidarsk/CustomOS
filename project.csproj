@@ -1,0 +1,87 @@
+<Project>
+
+  <Target Name="Build"> 
+    <MakeDir Directories="bin"/>
+    <Csc 
+      Sources="@(DotNet);@(CS)"
+      AllowUnsafeBlocks="true"
+      NoStandardLib="true"
+      NoConfig="true"
+      NoLogo="true"
+      NoWin32Manifest="true"
+      Nullable="enable"
+      Platform="x64"
+      TargetType="exe"
+      EmitDebugInformation="false"
+      Deterministic="false"
+      Optimize="true"
+      OutputAssembly="bin/managed.exe"
+      DisabledWarnings="CS8021"
+      DefineConstants="BITS64"
+    />
+    <Exec
+      Command="~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/8.0.0/tools/ilc bin/managed.exe -o bin/managed.o --systemmodule managed --targetos linux --targetarch x64 --instruction-set x86-x64"
+    />
+    <Exec
+      Command="gcc %(C.Identity) -o bin/$([System.IO.Path]::GetFileName('%(C.Identity)')).o -I include -c -Wall -Wextra -m64 -ffreestanding -nostdlib -mpreferred-stack-boundary=4 -fno-pie -fno-asynchronous-unwind-tables -fno-stack-protector -Wno-implicit-function-declaration"
+    />
+    <Exec
+      Command="nasm %(ASM.Identity) -o bin/$([System.IO.Path]::GetFileName('%(ASM.Identity)')).o -f elf64"
+    />
+    <Exec
+      Command="nasm %(DotNetRuntime.Identity) -o bin/$([System.IO.Path]::GetFileName('%(DotNetRuntime.Identity)')).o -f elf64"
+    />
+    <Exec
+      Command="ld -m elf_x86_64 -T linker.ld --no-warn-rwx-segment bin/*.o -o bin/kernel.bin"
+    />
+  </Target>
+
+  <Target Name="Run"> 
+    <MakeDir Directories="iso;iso/boot;iso/boot/grub"/>
+    <Copy SourceFiles="grub.cfg" DestinationFolder="iso/boot/grub"/>
+    <Copy SourceFiles="bin/kernel.bin" DestinationFolder="iso/boot"/>
+
+    <Exec Command="grub-mkrescue iso -o bin/kernel.iso"/>
+    <Exec Command="qemu-system-x86_64 -display gtk -hda bin/kernel.iso -d int -no-reboot"/>
+  </Target>
+
+  <Target Name="Clean"> 
+    <RemoveDir Directories="bin;iso"/>
+  </Target>
+
+  <ItemGroup>
+    <DotNet Include="dotnet/System/*.cs"/>
+    <DotNet Include="dotnet/System/Reflection/*.cs"/>
+    <DotNet Include="dotnet/System/Runtime/*.cs"/>
+    <DotNet Include="dotnet/System/Runtime/CompilerServices/*.cs"/>
+    <DotNet Include="dotnet/System/Runtime/InteropServices/*.cs"/>
+    <DotNet Include="dotnet/System/Runtime/Versioning/*.cs"/>
+    <DotNet Include="dotnet/System/Collections/*.cs"/>
+    <DotNet Include="dotnet/System/Collections/Generic/*.cs"/>
+    <DotNet Include="dotnet/Internal/TypeSystem/*.cs"/>
+    <DotNet Include="dotnet/Internal/NativeFormat/*.cs"/>
+    <DotNet Include="dotnet/Internal/Runtime/*.cs"/>
+    <DotNet Include="dotnet/Internal/Runtime/CompilerServices/*.cs"/>
+    <DotNet Include="dotnet/Internal/Runtime/CompilerHelpers/*.cs"/>
+    <DotNetRuntime Include="dotnet/runtime/*.asm"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <CS Include="Kernel/*.cs"/>
+    <CS Include="Kernel/IO/*.cs"/>
+    <CS Include="Kernel/IO/PIC/*.cs"/>
+    <CS Include="Kernel/Interrupts/*.cs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ASM Include="Boot/*.asm"/>
+    <ASM Include="Kernel/*.asm"/>
+    <ASM Include="Kernel/IO/*.asm"/>
+    <ASM Include="Kernel/Interrupts/*.asm"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <C Include="Kernel/*.c"/>
+  </ItemGroup>
+
+</Project>
