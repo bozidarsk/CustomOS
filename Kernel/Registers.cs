@@ -86,4 +86,6 @@ public readonly struct Registers
 	[FieldOffset(8 * 15)] public readonly byte r15b;
 
 	[FieldOffset(8 * 16)] public readonly ulong rip;
+
+	[FieldOffset(8 * 17)] public readonly ulong rflags;
 }

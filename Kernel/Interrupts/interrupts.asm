@@ -4,16 +4,11 @@ global loadidt
 global getisr
 global setisrhandler
 global getisrhandler
-extern writechars
 extern sendeoi
-extern ulong2hex
 extern memcpy
+extern abort
 
 section .rodata
-
-nohandlermsg0: dw 0x75, 0x6e, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x20, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x20, 0x30, 0x78, 0
-nohandlermsg1: dw 0x20, 0x61, 0x74, 0x20, 0x30, 0x78, 0
-newline: dw 0x0a, 0
 
 isr_table:
 	%assign i 0
@@ -24,6 +19,7 @@ isr_table:
 
 section .bss
 
+align 16
 registers:
 	.rax: resq 1
 	.rbx: resq 1
@@ -42,7 +38,9 @@ registers:
 	.r14: resq 1
 	.r15: resq 1
 	.rip: resq 1
-registers_end:
+	.rflags: resq 1
+
+registers_size: equ ($ - registers) + (($ - registers) % 16) ; for alignment
 
 section .data
 
@@ -63,38 +61,17 @@ loadidt:
 
 ; nint getisr(int index)
 getisr:
-	xor rax, rax
-	mov eax, edi
-	mov rbx, 8
-	mul rbx
-
-	add rax, isr_table
-	mov rax, qword [rax]
-
+	mov rax, qword [isr_table + edi * 8]
 	ret
 
 ; void getisrhandler(int index, nint handler)
 setisrhandler:
-	xor rax, rax
-	mov eax, edi
-	mov rbx, 8
-	mul rbx
-
-	add rax, isrhandler_table
-	mov qword [rax], rsi
-
+	mov qword [isrhandler_table + edi * 8], rsi
 	ret
 
 ; nint getisrhandler(int index)
 getisrhandler:
-	xor rax, rax
-	mov eax, edi
-	mov rbx, 8
-	mul rbx
-
-	add rax, isrhandler_table
-	mov rax, qword [rax]
-
+	mov rax, qword [isrhandler_table + edi * 8]
 	ret
 
 isr_common:
@@ -115,55 +92,45 @@ isr_common:
 	mov [registers.r14], r14
 	mov [registers.r15], r15
 
+	sub rsp, 8
 	mov rbp, rsp
-	; rbp == index
-	; rbp + 8 == error
+	; rbp == handler
+	; rbp + 8 == index
+	; rbp + 16 == error
 
-	mov rax, qword [rbp + 16]
+	mov rax, qword [rbp + 24]
 	mov qword [registers.rip], rax
+	mov rax, qword [rbp + 40]
+	mov qword [registers.rflags], rax
 
 
-	mov rdi, qword [rbp]
+	mov rdi, qword [rbp + 8]
 	call getisrhandler
+	mov qword [rbp], rax
 	cmp rax, 0
-	je .nohandler
-	push rax
+	jne .callhandler
+
+	mov eax, -1
+	.error:
+	mov edi, eax
+	call abort
 
 
-	sub rsp, registers_end - registers
+	.callhandler:
+	sub rsp, registers_size
 	mov rdi, rsp
 	mov rsi, registers
-	mov rdx, registers_end - registers
+	mov rdx, registers_size
 	call memcpy
 
-	mov rsi, [rbp + 8]
-	mov rax, qword [rsp + (registers_end - registers)]
-	call rax
+	mov rsi, qword [rbp + 16]
+	call qword [rbp]
 
-	add rsp, registers_end - registers
-	pop rax
-	jmp .continue
+	cmp eax, 0
+	jne .error
 
 
-	.nohandler:
-	mov rdi, nohandlermsg0
-	call writechars
-	mov rdi, qword [rbp]
-	call ulong2hex
-	mov rdi, rax
-	call writechars
-	mov rdi, nohandlermsg1
-	call writechars
-	mov rdi, qword [registers.rip]
-	call ulong2hex
-	mov rdi, rax
-	call writechars
-	mov rdi, newline
-	call writechars
-
-
-	.continue:
-	mov rdi, qword [rbp]
+	mov rdi, qword [rbp + 8]
 	call sendeoi
 
 

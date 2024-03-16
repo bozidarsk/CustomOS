@@ -26,7 +26,6 @@ public readonly struct InterruptDescriptor
 
 		ulong pointer = (ulong)getisr(index);
 
-		Console.Write(""); // ???
 		setisrhandler(index, handler.m_functionPointer);
 
 		this.KernelCodeSegment = 8;

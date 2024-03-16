@@ -4,6 +4,9 @@ global _start64
 global gdt64
 global gdt64.code_segment
 global gdt64.descriptor
+global abort
+extern writechars
+extern qword2hex
 extern kmain
 
 section .bss
@@ -13,6 +16,10 @@ section .bss
 	; tts: resd 26 ; https://wiki.osdev.org/Task_State_Segment#Long_Mode
 
 section .rodata
+
+abortmsg0: dw 0x61, 0x62, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x20, 0x77, 0x69, 0x74, 0x68, 0x20, 0x63, 0x6f, 0x64, 0x65, 0x20, 0x30, 0x78, 0
+abortmsg1: dw 0x2c, 0x20, 0x6e, 0x65, 0x78, 0x74, 0x20, 0x69, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x61, 0x74, 0x20, 0x30, 0x78, 0
+
 ; https://wiki.osdev.org/GDT
 gdt64:
 	dq 0 ; zero entry
@@ -31,6 +38,33 @@ gdt64:
 		dq gdt64
 
 section .text
+
+; void abort(int code)
+abort:
+	xor rax, rax
+	mov eax, edi
+	push rax
+
+	; [rsp] == code
+	; [rsp + 8] == return address
+
+	mov rdi, abortmsg0
+	call writechars
+	mov rdi, qword [rsp]
+	mov rsi, -1
+	call qword2hex
+	mov rdi, rax
+	call writechars
+	mov rdi, abortmsg1
+	call writechars
+	mov rdi, qword [rsp + 8]
+	mov rsi, 16
+	call qword2hex
+	mov rdi, rax
+	call writechars
+
+	cli
+	hlt
 
 _start64:
 	mov ax, 0
@@ -73,5 +107,4 @@ _start64:
 	call kmain
 
 	; hlt breaks interrupts
-	.eok:
-	jmp .eok
+	jmp $
