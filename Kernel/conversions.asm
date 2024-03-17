@@ -1,7 +1,7 @@
 bits 64
 
-global ulong2hex
-extern printhex
+global qword2hex
+global qword2bin
 
 section .rodata
 
@@ -9,35 +9,74 @@ chars: dw 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62
 
 section .bss
 
-resw 50
+resw 512
 buffer: resw 1
 
 section .text
 
-; char* ulong2hex(ulong x)
-ulong2hex:
-	mov rbx, rdi
-
+; char* qword2hex(ulong x, int minLength = -1)
+qword2hex:
 	mov rax, buffer
 	mov word [rax], 0
 
 	.loop:
-	mov rcx, rbx
+	mov rcx, rdi
 	and rcx, 0xf
-	push rax
-	mov rax, rcx
-	mov rcx, 2
-	mul rcx
-	mov rcx, rax
-	pop rax
-	add rcx, chars
-	mov cx, word [rcx]
+	mov cx, word [chars + rcx * 2]
 
 	sub rax, 2
 	mov word [rax], cx
 
-	shr rbx, 4
-	cmp rbx, 0
+	dec esi
+	shr rdi, 4
+	cmp rdi, 0
 	jne .loop
+
+	cmp esi, 1 << 31
+	jb .fillzeroes
+
+	ret
+
+	.fillzeroes:
+	sub rax, 2
+	mov word [rax], 0x30
+
+	dec esi
+	cmp esi, 1 << 31
+	jb .fillzeroes
+
+	ret
+
+
+; char* qword2bin(ulong x, int minLength = -1)
+qword2bin:
+	mov rax, buffer
+	mov word [rax], 0
+
+	.loop:
+	mov rcx, rdi
+	and rcx, 1
+	add cx, 0x30
+
+	sub rax, 2
+	mov word [rax], cx
+
+	dec esi
+	shr rdi, 1
+	cmp rdi, 0
+	jne .loop
+
+	cmp esi, 1 << 31
+	jb .fillzeroes
+
+	ret
+
+	.fillzeroes:
+	sub rax, 2
+	mov word [rax], 0x30
+
+	dec esi
+	cmp esi, 1 << 31
+	jb .fillzeroes
 
 	ret

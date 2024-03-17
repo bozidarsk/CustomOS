@@ -3,6 +3,7 @@ using System.Runtime;
 using System.Runtime.InteropServices;
 
 using Kernel.IO;
+using Kernel.Drivers.PCI;
 using Kernel.Interrupts;
 
 namespace Kernel;
@@ -64,12 +65,35 @@ public static class Kernel
 		new InterruptDescriptorTable(entries).Load();
 	}
 
+	private static void SetupPCIDevices() 
+	{
+		for (int location = 0x0000; location <= 0xffff; location++) 
+		{
+			if (!PCI.Exists(location >> 8, location & 0xff, 0, out DeviceType type))
+				continue;
+
+			Device dev;
+
+			switch (type) 
+			{
+				case DeviceType.General:
+					dev = new GeneralDevice(location >> 8, location & 0xff);
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+
+			Console.WriteLine((nint)dev.Class);
+		}
+	}
+
 	[RuntimeExport("kmain")]
 	public static unsafe void Main() 
 	{
 		Console.ForegroundColor = ConsoleColor.White;
 
 		SetupInterrupts();
+		SetupPCIDevices();
 
 		// throw new Exception();
 	}

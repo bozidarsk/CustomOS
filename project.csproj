@@ -1,6 +1,6 @@
 <Project>
 
-  <Target Name="Build"> 
+  <Target Name="Build">
     <MakeDir Directories="bin"/>
     <Csc 
       Sources="@(DotNet);@(CS)"
@@ -17,7 +17,7 @@
       Optimize="true"
       OutputAssembly="bin/managed.exe"
       DisabledWarnings="CS8021"
-      DefineConstants="BITS64"
+      DefineConstants="BITS64;TARGET_X64;TARGET_64BIT;TARGET_AMD64;TARGET_UNIX"
     />
     <Exec
       Command="~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/8.0.0/tools/ilc bin/managed.exe -o bin/managed.o --systemmodule managed --targetos linux --targetarch x64 --instruction-set x86-x64"
@@ -36,22 +36,30 @@
     />
   </Target>
 
-  <Target Name="Run"> 
+  <Target Name="Run">
     <MakeDir Directories="iso;iso/boot;iso/boot/grub"/>
     <Copy SourceFiles="grub.cfg" DestinationFolder="iso/boot/grub"/>
     <Copy SourceFiles="bin/kernel.bin" DestinationFolder="iso/boot"/>
 
+    <Exec Command="if [[ $(ls bin/drive.bin) == '' ]]; then dd if=/dev/zero of=bin/drive.bin bs=1M count=500; fi"/>
+
     <Exec Command="grub-mkrescue iso -o bin/kernel.iso"/>
-    <Exec Command="qemu-system-x86_64 -display gtk -hda bin/kernel.iso -d int -no-reboot"/>
+    <Exec Command="qemu-system-x86_64 -display gtk -drive id=kernel,file=bin/kernel.iso -drive id=drive,file=bin/drive.bin -device ich9-ahci -d int -no-reboot"/>
   </Target>
 
-  <Target Name="Clean"> 
+  <Target Name="Dump">
+    <Exec Directories="objdump -DM intel bin/kernel.bin"/>
+  </Target>
+
+  <Target Name="Clean">
     <RemoveDir Directories="bin;iso"/>
   </Target>
 
   <ItemGroup>
     <DotNet Include="dotnet/System/*.cs"/>
     <DotNet Include="dotnet/System/Reflection/*.cs"/>
+    <DotNet Include="dotnet/System/Numerics/*.cs"/>
+    <DotNet Include="dotnet/System/Threading/*.cs"/>
     <DotNet Include="dotnet/System/Runtime/*.cs"/>
     <DotNet Include="dotnet/System/Runtime/CompilerServices/*.cs"/>
     <DotNet Include="dotnet/System/Runtime/InteropServices/*.cs"/>
@@ -69,7 +77,8 @@
   <ItemGroup>
     <CS Include="Kernel/*.cs"/>
     <CS Include="Kernel/IO/*.cs"/>
-    <CS Include="Kernel/IO/PIC/*.cs"/>
+    <CS Include="Kernel/Drivers/PCI/*.cs"/>
+    <CS Include="Kernel/Drivers/AHCI/*.cs"/>
     <CS Include="Kernel/Interrupts/*.cs"/>
   </ItemGroup>
 

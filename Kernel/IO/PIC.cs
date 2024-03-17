@@ -27,7 +27,7 @@ public static class PIC
 	private const byte COMMAND_READ_ISR = 0x0b;
 	#endregion constants
 
-	public static byte Offset { private set; get; }
+	public const byte Offset = 0x20;
 
 	public static ushort IRR 
 	{
@@ -49,9 +49,9 @@ public static class PIC
 		}
 	}
 
-	public static void Remap(byte offset = 0x20) 
+	public static void Remap() 
 	{
-		PIC.Offset = offset;
+		byte offset = PIC.Offset;
 
 		IOPort.OutByte(MASTER_COMMAND, ICW1_INITIALIZE | ICW1_ICW4); // starts the initialization sequence (in cascade mode)
 		IOPort.Wait();
