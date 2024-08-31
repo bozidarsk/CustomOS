@@ -1,7 +1,4 @@
 global _start64
-; global gdt64
-; global gdt64.code_segment
-; global gdt64.descriptor
 global getkernelend
 
 extern kmain
