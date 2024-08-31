@@ -5,9 +5,10 @@ extern _start64
 extern gdt64
 extern gdt64.code_segment
 extern gdt64.descriptor
-extern multiboot_address
 
 section .bss
+
+multiboot_address: resb 8
 
 align 4096
 page_table_l4: resb 4096
@@ -15,7 +16,7 @@ page_table_l3: resb 4096
 page_table_l2: resb 4096
 
 align 16
-resb 16384 ; 8192
+resb (2 * 1024 * 1024)
 stack:
 
 section .text
@@ -23,8 +24,31 @@ section .text
 _start:
 	cli
 
-	mov dword [multiboot_address], ebx
 	mov esp, stack
+
+
+	mov esi, ebx
+	mov ecx, [esi]
+
+	mov eax, ecx
+	mov ebx, 16
+	div ebx
+	mov eax, ebx
+	sub eax, edx
+	add ecx, eax
+
+	sub esp, ecx
+	mov edi, esp
+	.save_bootinfo:
+	mov al, byte [esi]
+	mov byte [edi], al
+	inc edi
+	inc esi
+	dec ecx
+	cmp ecx, 0
+	ja .save_bootinfo
+	mov dword [multiboot_address], esp
+
 
 	call enable_a20
 	jmp enter_long_mode
@@ -94,6 +118,7 @@ enter_long_mode:
 	mov cr0, eax
 
 	lgdt [gdt64.descriptor]
+	mov edi, dword [multiboot_address]
 	jmp gdt64.code_segment:_start64
 
 error:

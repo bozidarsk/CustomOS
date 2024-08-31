@@ -1,14 +1,30 @@
-bits 64
-
 global loadidt
 global getisr
 global setisrhandler
 global getisrhandler
+
 extern sendeoi
 extern memcpy
-extern abort
+extern panic
+extern Int32__ToString
+extern Int64__ToString
+extern String__Concat
+extern _ZTV6String
 
 section .rodata
+
+string_failed:
+	dq _ZTV6String
+	dd 39
+	dw 0x49, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x20, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x20, 0x66, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x20, 0x66, 0x6f, 0x72, 0x20, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x20, 0x00
+string_notfound:
+	dq _ZTV6String
+	dd 42
+	dw 0x49, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x20, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x66, 0x6f, 0x75, 0x6e, 0x64, 0x20, 0x66, 0x6f, 0x72, 0x20, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x72, 0x75, 0x70, 0x74, 0x20, 0x00
+string_dot:
+	dq _ZTV6String
+	dd 1
+	dw 0x2e, 0x00
 
 isr_table:
 	%assign i 0
@@ -108,12 +124,42 @@ isr_common:
 	call getisrhandler
 	mov qword [rbp], rax
 	cmp rax, 0
-	jne .callhandler
+	jnz .callhandler
+	jmp .error_notfound
 
-	mov eax, -1
 	.error:
+	cmp eax, 0x03
+	je .error_throwexception
+
 	mov edi, eax
-	call abort
+	call Int32__ToString
+	mov rdi, rax
+	mov rsi, string_dot
+	call String__Concat
+	mov rdi, string_failed
+	mov rsi, rax
+	call String__Concat
+	mov rdi, rax
+	xor rsi, rsi
+	jmp panic
+
+	.error_throwexception:
+	mov rdi, qword [registers.rdi]
+	mov rsi, qword [registers.rsi]
+	jmp panic
+
+	.error_notfound:
+	mov rdi, qword [rbp + 8]
+	call Int64__ToString
+	mov rdi, rax
+	mov rsi, string_dot
+	call String__Concat
+	mov rdi, string_notfound
+	mov rsi, rax
+	call String__Concat
+	mov rdi, rax
+	xor rsi, rsi
+	jmp panic
 
 
 	.callhandler:
@@ -126,8 +172,12 @@ isr_common:
 	mov rsi, qword [rbp + 16]
 	call qword [rbp]
 
-	cmp eax, 0
-	jne .error
+	; if lsb == 1 then jmp error with interrupt number == eax >> 1
+	mov ebx, eax
+	shr eax, 1
+	and ebx, 1
+	cmp ebx, 0
+	jnz .error
 
 
 	mov rdi, qword [rbp + 8]

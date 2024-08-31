@@ -59,7 +59,7 @@ public static class DefaultInterruptHandlers
 		Console.WriteLine($"Exception '{names[index]}' occured.");
 		DumpRegisters(registers);
 
-		return 1;
+		return (index << 1) | 1;
 	}
 
 	public static int InterruptRequest(int index, Registers registers, ulong error) 

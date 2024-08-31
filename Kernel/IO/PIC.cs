@@ -1,5 +1,3 @@
-using System.Runtime;
-
 namespace Kernel.IO;
 
 public static class PIC 
@@ -33,9 +31,9 @@ public static class PIC
 	{
 		get 
 		{
-			IOPort.OutByte(MASTER_COMMAND, COMMAND_READ_IRR);
-			IOPort.OutByte(SLAVE_COMMAND, COMMAND_READ_IRR);
-			return (ushort)(((ushort)IOPort.InByte(SLAVE_COMMAND) << 8) | (ushort)IOPort.InByte(MASTER_COMMAND));
+			IOPort.Write<byte>(MASTER_COMMAND, COMMAND_READ_IRR);
+			IOPort.Write<byte>(SLAVE_COMMAND, COMMAND_READ_IRR);
+			return (ushort)(((ushort)IOPort.Read<byte>(SLAVE_COMMAND) << 8) | (ushort)IOPort.Read<byte>(MASTER_COMMAND));
 		}
 	}
 
@@ -43,9 +41,9 @@ public static class PIC
 	{
 		get 
 		{
-			IOPort.OutByte(MASTER_COMMAND, COMMAND_READ_ISR);
-			IOPort.OutByte(SLAVE_COMMAND, COMMAND_READ_ISR);
-			return (ushort)(((ushort)IOPort.InByte(SLAVE_COMMAND) << 8) | (ushort)IOPort.InByte(MASTER_COMMAND));
+			IOPort.Write<byte>(MASTER_COMMAND, COMMAND_READ_ISR);
+			IOPort.Write<byte>(SLAVE_COMMAND, COMMAND_READ_ISR);
+			return (ushort)(((ushort)IOPort.Read<byte>(SLAVE_COMMAND) << 8) | (ushort)IOPort.Read<byte>(MASTER_COMMAND));
 		}
 	}
 
@@ -53,42 +51,42 @@ public static class PIC
 	{
 		byte offset = PIC.Offset;
 
-		IOPort.OutByte(MASTER_COMMAND, ICW1_INITIALIZE | ICW1_ICW4); // starts the initialization sequence (in cascade mode)
+		IOPort.Write<byte>(MASTER_COMMAND, ICW1_INITIALIZE | ICW1_ICW4); // starts the initialization sequence (in cascade mode)
 		IOPort.Wait();
-		IOPort.OutByte(SLAVE_COMMAND, ICW1_INITIALIZE | ICW1_ICW4);
-		IOPort.Wait();
-
-		IOPort.OutByte(MASTER_DATA, offset); // ICW2: Master PIC vector offset
-		IOPort.Wait();
-		IOPort.OutByte(SLAVE_DATA, (byte)(offset + 8)); // ICW2: Slave PIC vector offset
+		IOPort.Write<byte>(SLAVE_COMMAND, ICW1_INITIALIZE | ICW1_ICW4);
 		IOPort.Wait();
 
-		IOPort.OutByte(MASTER_DATA, 4); // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0000 0100)
+		IOPort.Write<byte>(MASTER_DATA, offset); // ICW2: Master PIC vector offset
 		IOPort.Wait();
-		IOPort.OutByte(SLAVE_DATA, 2); // ICW3: tell Slave PIC its cascade identity (0000 0010)
+		IOPort.Write<byte>(SLAVE_DATA, (byte)(offset + 8)); // ICW2: Slave PIC vector offset
 		IOPort.Wait();
 
-		IOPort.OutByte(MASTER_DATA, ICW4_8086); // ICW4: have the PICs use 8086 mode (and not 8080 mode)
+		IOPort.Write<byte>(MASTER_DATA, 4); // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0000 0100)
 		IOPort.Wait();
-		IOPort.OutByte(SLAVE_DATA, ICW4_8086);
+		IOPort.Write<byte>(SLAVE_DATA, 2); // ICW3: tell Slave PIC its cascade identity (0000 0010)
+		IOPort.Wait();
+
+		IOPort.Write<byte>(MASTER_DATA, ICW4_8086); // ICW4: have the PICs use 8086 mode (and not 8080 mode)
+		IOPort.Wait();
+		IOPort.Write<byte>(SLAVE_DATA, ICW4_8086);
 		IOPort.Wait();
 
 		// clear masks
-		IOPort.OutByte(MASTER_DATA, 0);
+		IOPort.Write<byte>(MASTER_DATA, 0);
 		IOPort.Wait();
-		IOPort.OutByte(SLAVE_DATA, 0);
+		IOPort.Write<byte>(SLAVE_DATA, 0);
 		IOPort.Wait();
 	}
 
 	public static void Disable() 
 	{
-		IOPort.OutByte(MASTER_DATA, 0xff);
+		IOPort.Write<byte>(MASTER_DATA, 0xff);
 		IOPort.Wait();
-		IOPort.OutByte(SLAVE_DATA, 0xff);
+		IOPort.Write<byte>(SLAVE_DATA, 0xff);
 		IOPort.Wait();
 	}
 
-	[RuntimeExport("sendeoi")]
+	[Export("sendeoi")]
 	private static void SendEOI(int index) 
 	{
 		index -= PIC.Offset;
@@ -96,7 +94,7 @@ public static class PIC
 			return;
 
 		if (index > 7)
-			IOPort.OutByte(SLAVE_COMMAND, COMMAND_EOI);
-		IOPort.OutByte(MASTER_COMMAND, COMMAND_EOI);
+			IOPort.Write<byte>(SLAVE_COMMAND, COMMAND_EOI);
+		IOPort.Write<byte>(MASTER_COMMAND, COMMAND_EOI);
 	}
 }

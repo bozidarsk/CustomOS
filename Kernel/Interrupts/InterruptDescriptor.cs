@@ -3,30 +3,31 @@ using System.Runtime.InteropServices;
 
 namespace Kernel.Interrupts;
 
-[StructLayout(LayoutKind.Explicit)]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct InterruptDescriptor 
 {
-	[FieldOffset(0)] public readonly ushort BaseLow;
-	[FieldOffset(2)] public readonly ushort KernelCodeSegment;
-	[FieldOffset(4)] public readonly byte InterruptStackTable;
-	[FieldOffset(5)] public readonly InterruptFlags Flags;
-	[FieldOffset(6)] public readonly ushort BaseMid;
-	[FieldOffset(8)] public readonly uint BaseHigh;
-	[FieldOffset(12)] public readonly int Index;
+	public readonly ushort BaseLow;
+	public readonly ushort KernelCodeSegment;
+	public readonly byte InterruptStackTable;
+	public readonly InterruptFlags Flags;
+	public readonly ushort BaseMid;
+	public readonly uint BaseHigh;
+	public readonly int Index;
 
-	[DllImport("*", CallingConvention = CallingConvention.Cdecl)] private static extern nint getisr(int index);
-	[DllImport("*", CallingConvention = CallingConvention.Cdecl)] private static extern void setisrhandler(int index, nint handler);
+	[Import] private static extern nint getisr(int index);
+	[Import] private static extern void setisrhandler(int index, nint handler);
 
 	public InterruptDescriptor(int index, InterruptFlags flags, InterruptHandler handler) 
 	{
 		if (handler == null)
 			throw new ArgumentNullException();
+
 		if (index < 0 || index > 0xff)
 			throw new ArgumentOutOfRangeException();
 
 		ulong pointer = (ulong)getisr(index);
 
-		setisrhandler(index, handler.m_functionPointer);
+		setisrhandler(index, Marshal.GetFunctionPointerForDelegate(handler));
 
 		this.KernelCodeSegment = 8;
 		this.InterruptStackTable = 0;
@@ -36,6 +37,6 @@ public readonly struct InterruptDescriptor
 		this.BaseMid = (ushort)((pointer >> 16) & 0xffff);
 		this.BaseHigh = (uint)((pointer >> 32) & 0xffffffff);
 
-		this.Index = 0;
+		this.Index = index;
 	}
 }

@@ -1,8 +1,4 @@
-bits 64
-
 global cpuid
-
-section .text
 
 ; void cpuid(uint command, out uint eax, out uint ebx, out uint ecx, out uint edx)
 cpuid:
@@ -12,6 +8,8 @@ cpuid:
 	push r13
 
 	mov eax, edi
+	xor ecx, ecx
+
 	mov r10, rsi
 	mov r11, rdx
 	mov r12, rcx

@@ -5,8 +5,7 @@ namespace Kernel;
 
 public static class CPUID 
 {
-	[DllImport("*", CallingConvention = CallingConvention.Cdecl)]
-	private static extern void cpuid(uint command, out uint eax, out uint ebx, out uint ecx, out uint edx);
+	[Import] private static extern void cpuid(uint command, out uint eax, out uint ebx, out uint ecx, out uint edx);
 
 	public static string Vendor 
 	{

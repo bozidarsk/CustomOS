@@ -3,11 +3,11 @@ using System.Runtime.InteropServices;
 
 namespace Kernel.Interrupts;
 
-[StructLayout(LayoutKind.Explicit)]
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
 public readonly struct InterruptDescriptorTable 
 {
-	[FieldOffset(0)] public readonly ushort Limit;
-	[FieldOffset(2)] public readonly nint Base;
+	public readonly ushort Limit;
+	public readonly nint Base;
 
 	[DllImport("*", CallingConvention = CallingConvention.Cdecl)] private static extern void loadidt(nint table);
 

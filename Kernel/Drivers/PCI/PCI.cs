@@ -16,11 +16,11 @@ public static class PCI
 
 	public static uint ReadDWord(int bus, int device, int function, int offset) 
 	{
-		IOPort.OutDWord(CONFIG_ADDRESS, (uint)(
+		IOPort.Write<int>(CONFIG_ADDRESS,
 			(1 << 31) | (bus << 16) | (device << 11) | (function << 8) | (offset & ~0b11)
-		));
+		);
 
-		return IOPort.InDWord(CONFIG_DATA);
+		return IOPort.Read<uint>(CONFIG_DATA);
 	}
 
 	public static ushort ReadWord(int bus, int device, int function, int offset) 
