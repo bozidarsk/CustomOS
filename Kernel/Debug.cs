@@ -5,7 +5,6 @@ namespace Kernel;
 
 public static unsafe class Debug 
 {
-	[Import] private static extern char* qword2hex(ulong x, int minLength);
 	[Import] private static extern void writechars(char* pointer);
 	[Import] private static extern void* getkernelend();
 	[Import] private static extern ulong getrbp();
@@ -55,46 +54,21 @@ public static unsafe class Debug
 		writechars(buffer);
 	}
 
-	// [Export("printf")]
-	// public static void printf(const byte* format, ...) 
-	// {
-	// 	va_list args;
-	// 	va_start(args, format);
-
-	// 	for (ulong i = 0; format[i] != 0x00; i++) 
-	// 	{
-	// 		if (format[i] == '%') 
-	// 		{
-	// 			switch (format[++i]) 
-	// 			{
-	// 				case 'x':
-	// 					putc('0');
-	// 					putc('x');
-	// 					writechars(qword2hex(va_arg(args, ulong), 16));
-	// 					break;
-	// 				case 's':
-	// 					puts(va_arg(args, byte*));
-	// 					break;
-	// 				case '%':
-	// 					putc(format[i]);
-	// 					break;
-	// 			}
-
-	// 			continue;
-	// 		}
-
-	// 		putc(format[i]);
-	// 	}
-
-	// 	va_end(args);
-	// }
-
 	[Export("printhex")]
 	public static void printhex(ulong hex) 
 	{
 		putc(0x30);
 		putc(0x78);
-		writechars(qword2hex(hex, 16));
+		int length = sizeof(ulong) * 2;
+		char* array = stackalloc char[length + 1];
+		array[length] = '\0';
+
+		for (int i = 0; i < length; i++) 
+		{
+			int digit = (int)((ulong)hex >> ((length - i - 1) * 4)) & 0xf;
+			array[i] = (char)(digit + ((digit >= 0xa) ? (0x61 - 0xa) : 0x30));
+		}
+		writechars(array);
 		putc(0x0a);
 	}
 
