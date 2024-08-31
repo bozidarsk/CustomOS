@@ -1,22 +1,11 @@
 global _start64
-global gdt64
-global gdt64.code_segment
-global gdt64.descriptor
+; global gdt64
+; global gdt64.code_segment
+; global gdt64.descriptor
 global getkernelend
 
 extern kmain
 extern KERNELEND
-
-section .rodata
-
-; https://wiki.osdev.org/GDT
-gdt64:
-	dq 0 ; zero entry
-	.code_segment: equ $ - gdt64
-		dq (1 << 41) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53)
-	.descriptor:
-		dw $ - gdt64 - 1
-		dq gdt64
 
 section .text
 

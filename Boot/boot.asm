@@ -2,9 +2,16 @@ bits 32
 
 global _start
 extern _start64
-extern gdt64
-extern gdt64.code_segment
-extern gdt64.descriptor
+
+section .rodata
+
+$gdt:
+	dq 0 ; zero entry
+	.code_segment: equ $ - $gdt
+		dq (1 << 41) | (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53)
+	.descriptor:
+		dw $ - $gdt - 1
+		dq $gdt
 
 section .bss
 
@@ -117,9 +124,9 @@ enter_long_mode:
 	or eax, 1 << 31
 	mov cr0, eax
 
-	lgdt [gdt64.descriptor]
+	lgdt [$gdt.descriptor]
 	mov edi, dword [multiboot_address]
-	jmp gdt64.code_segment:_start64
+	jmp $gdt.code_segment:_start64
 
 error:
 	mov dword [0xb8000], 0x04720465
