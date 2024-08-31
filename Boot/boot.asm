@@ -17,12 +17,12 @@ section .bss
 
 multiboot_address: resb 8
 
-align 4096
+alignb 4096
 page_table_l4: resb 4096
 page_table_l3: resb 4096
 page_table_l2: resb 4096
 
-align 16
+alignb 16
 resb (2 * 1024 * 1024)
 stack:
 
