@@ -1,9 +1,8 @@
-using System;
-
 namespace System.Runtime.InteropServices;
 
-[Serializable]
-public class MarshalDirectiveException : SystemException
+using System;
+
+public class MarshalDirectiveException : Exception
 {
 	public MarshalDirectiveException() : base("Marshaling directives are invalid.") {}
 	public MarshalDirectiveException(string? message) : base(message) {}

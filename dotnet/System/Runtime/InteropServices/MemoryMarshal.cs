@@ -2,8 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
-using Internal.Runtime.CompilerServices;
+using Internal.Runtime;
 
 namespace System.Runtime.InteropServices
 {
@@ -19,7 +18,6 @@ namespace System.Runtime.InteropServices
         /// if the caller wishes to write to the returned reference.
         /// </remarks>
         [Intrinsic]
-        [NonVersionable]
         public static ref T GetArrayDataReference<T>(T[] array) =>
             ref GetArrayDataReference(array);
 
@@ -42,7 +40,7 @@ namespace System.Runtime.InteropServices
             // to special-case arrays of known type and dimension.
 
             // See comment on RawArrayData (in RuntimeHelpers.CoreCLR.cs) for details
-            return ref Unsafe.AddByteOffset(ref Unsafe.As<RawData>(array).Data, (nint)array.MethodTable->BaseSize - (nint)(2 * sizeof(IntPtr)));
+            return ref Unsafe.AddByteOffset(ref Unsafe.As<RawData>(array).Data, (nuint)array.GetMethodTable()->BaseSize - (nuint)(2 * sizeof(IntPtr)));
         }
     }
 }

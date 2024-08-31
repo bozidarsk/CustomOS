@@ -4,47 +4,29 @@ namespace System;
 
 public unsafe readonly struct UIntPtr 
 {
-	readonly void* _value;
-
-	public UIntPtr(void* value) { _value = value; }
-	public UIntPtr(int value) { _value = (void*)value; }
-	public UIntPtr(uint value) { _value = (void*)value; }
-	public UIntPtr(long value) { _value = (void*)value; }
-	public UIntPtr(ulong value) { _value = (void*)value; }
+	private readonly void* value;
 
 	[Intrinsic]
 	public static readonly UIntPtr Zero;
+	public static unsafe int Size => sizeof(UIntPtr);
 
-	//public override bool Equals(object o)
-	//	=> _value == ((UIntPtr)o)._value;
+	public static explicit operator void*(UIntPtr x) => x.value;
+	public static explicit operator int(UIntPtr x) => (int)x.value;
+	public static explicit operator uint(UIntPtr x) => (uint)x.value;
+	public static explicit operator long(UIntPtr x) => (long)x.value;
+	public static explicit operator ulong(UIntPtr x) => (ulong)x.value;
 
-	public bool Equals(UIntPtr ptr)
-		=> _value == ptr._value;
+	public static explicit operator UIntPtr(void* x) => new UIntPtr(x);
+	public static explicit operator UIntPtr(int x) => new UIntPtr(x);
+	public static explicit operator UIntPtr(uint x) => new UIntPtr(x);
+	public static explicit operator UIntPtr(long x) => new UIntPtr(x);
+	public static explicit operator UIntPtr(ulong x) => new UIntPtr(x);
 
-	//public override int GetHashCode()
-	//	=> (int)_value;
+	public static bool operator == (UIntPtr a, UIntPtr b) => a.value == b.value;
+	public static bool operator != (UIntPtr a, UIntPtr b) => a.value != b.value;
 
-	public static explicit operator UIntPtr(int value) => new UIntPtr(value);
-	public static explicit operator UIntPtr(uint value) => new UIntPtr(value);
-	public static explicit operator UIntPtr(long value) => new UIntPtr(value);
-	public static explicit operator UIntPtr(ulong value) => new UIntPtr(value);
-	public static explicit operator UIntPtr(void* value) => new UIntPtr(value);
-	public static explicit operator void*(UIntPtr value) => value._value;
-
-	public static explicit operator int(UIntPtr value) {
-		var l = (long)value._value;
-
-		return checked((int)l);
-	}
-
-	public static explicit operator long(UIntPtr value) => (long)value._value;
-	public static explicit operator ulong(UIntPtr value) => (ulong)value._value;
-
-	public static UIntPtr operator +(UIntPtr a, uint b)
-		=> new UIntPtr((byte*)a._value + b);
-
-	public static UIntPtr operator +(UIntPtr a, ulong b)
-		=> new UIntPtr((byte*)a._value + b);
+	public override bool Equals(object? other) => (other is UIntPtr) ? ((UIntPtr)other).value == value : false;
+	public override int GetHashCode() => (int)value;
 
 	public override unsafe string ToString() 
 	{
@@ -59,4 +41,11 @@ public unsafe readonly struct UIntPtr
 
 		return new string(array, 0, length);
 	}
+
+	public UIntPtr(void* value) => this.value = value;
+	public UIntPtr(int value) => this.value = (void*)value;
+	public UIntPtr(uint value) => this.value = (void*)value;
+	public UIntPtr(long value) => this.value = (void*)value;
+	public UIntPtr(ulong value) => this.value = (void*)value;
 }
+

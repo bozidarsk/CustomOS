@@ -1,12 +1,20 @@
+using System.Runtime.CompilerServices;
+
 namespace System;
 
-[Serializable]
 public readonly struct Double 
 {
-	public const double MinValue = -1.7976931348623157E+308;
-	public const double MaxValue = 1.7976931348623157E+308;
-	public const double Epsilon = 4.9406564584124654E-324;
-	public const double NegativeInfinity = (double)-1.0 / (double)(0.0);
-	public const double PositiveInfinity = (double)1.0 / (double)(0.0);
-	public const double NaN = (double)0.0 / (double)0.0;
+	public const double MinValue = -1.7976931348623157E+308d;
+	public const double MaxValue = 1.7976931348623157E+308d;
+	public const double Epsilon = 4.9406564584124654E-324d;
+	public const double NegativeInfinity = -1d / 0d;
+	public const double PositiveInfinity = 1d / 0d;
+	public const double NaN = 0d / 0d;
+
+	#pragma warning disable CS1718
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static unsafe bool IsNaN(double x) => x != x;
+	#pragma warning restore
+
+	public override string ToString() => "System.Double";
 }

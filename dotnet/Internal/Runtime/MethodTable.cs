@@ -5,8 +5,8 @@ using System;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
 using Internal.NativeFormat;
-using Internal.Runtime.CompilerServices;
 
 namespace Internal.Runtime
 {
@@ -121,7 +121,7 @@ namespace Internal.Runtime
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe partial struct MethodTable
     {
-#if TARGET_64BIT
+#if !BITS32
         private const int POINTER_SIZE = 8;
         private const int PADDING = 1; // _numComponents is padded by one Int32 to make the first element pointer-aligned
 #else
@@ -947,6 +947,11 @@ namespace Internal.Runtime
                 _relatedType._pRelatedParameterType = value;
             }
 #endif
+        }
+
+        internal MethodTable* GetArrayEEType()
+        {
+            return EETypePtr.EETypePtrOf<Array>().ToPointer();
         }
 
         internal unsafe IntPtr* GetVTableStartAddress()

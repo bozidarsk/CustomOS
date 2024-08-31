@@ -1,56 +1,44 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 using System.Collections;
 using System.Collections.Generic;
 
-namespace System
+namespace System;
+
+public sealed class CharEnumerator : IEnumerator, IEnumerator<char>, IDisposable, ICloneable
 {
-    /// <summary>Supports iterating over a <see cref="string"/> object and reading its individual characters.</summary>
-    public sealed class CharEnumerator : IEnumerator, IEnumerator<char>, IDisposable, ICloneable
+    private string str;
+    private int index = -1;
+
+    object? IEnumerator.Current => Current;
+    public char Current 
     {
-        private string _str; // null after disposal
-        private int _index = -1;
-
-        internal CharEnumerator(string str) => _str = str;
-
-        public object Clone() => MemberwiseClone();
-
-        public bool MoveNext()
+        get 
         {
-            int index = _index + 1;
-            int length = _str.Length;
+            if (index < 0 || index >= str.Length)
+                throw new InvalidOperationException();
 
-            if (index < length)
-            {
-                _index = index;
-                return true;
-            }
-
-            _index = length;
-            return false;
+            return str[index];
         }
-
-        public void Dispose() => _str = null!;
-
-        object? IEnumerator.Current => Current;
-
-        public char Current
-        {
-            get
-            {
-                int index = _index;
-                string s = _str;
-                if ((uint)index >= (uint)s.Length)
-                    throw new InvalidOperationException();
-                // {
-                //     ThrowHelper.ThrowInvalidOperationException_EnumCurrent(_index);
-                // }
-
-                return s[index];
-            }
-        }
-
-        public void Reset() => _index = -1;
     }
+
+    public void Dispose() => str = null;
+    public object Clone() => MemberwiseClone();
+
+    public void Reset() => index = -1;
+    public bool MoveNext() 
+    {
+        int next = index + 1;
+
+        if (next < str.Length) 
+        {
+            index = next;
+            return true;
+        }
+
+        index = str.Length;
+        return false;
+    }
+
+    internal CharEnumerator(string str) => this.str = str;
 }
+
+

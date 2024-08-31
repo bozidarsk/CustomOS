@@ -6,7 +6,7 @@ namespace System.Runtime.InteropServices
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
     public sealed class DllImportAttribute : Attribute
     {
-        public DllImportAttribute(string dllName)
+        public DllImportAttribute(string dllName = "*")
         {
             Value = dllName;
         }

@@ -11,10 +11,11 @@
 ===========================================================*/
 
 using System.Runtime;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
-using Internal.Runtime.CompilerServices;
+// using Internal.Runtime.CompilerServices;
 
 using MethodTable = Internal.Runtime.MethodTable;
 using MethodTableList = Internal.Runtime.MethodTableList;
@@ -341,7 +342,8 @@ namespace System
         {
             get
             {
-                byte[] map = new byte[]
+                // ReadOnlySpan<byte> map = new byte[] 
+                byte* map = stackalloc byte[32] 
                 {
                     default,
                     (byte)CorElementType.ELEMENT_TYPE_VOID,      // EETypeElementType.Void
@@ -378,6 +380,9 @@ namespace System
                     default
                 };
 
+                // Verify last element of the map
+                Debug.Assert((byte)CorElementType.ELEMENT_TYPE_FNPTR == map[(int)EETypeElementType.FunctionPointer]);
+
                 return (CorElementType)map[(int)ElementType];
             }
         }
@@ -400,6 +405,7 @@ namespace System
 
         // internal ref T GetWritableData<T>() where T : unmanaged
         // {
+        //     Debug.Assert(Internal.Runtime.WritableData.GetSize(IntPtr.Size) == sizeof(T));
         //     return ref Unsafe.AsRef<T>((void*)_value->WritableData);
         // }
 
@@ -432,6 +438,8 @@ namespace System
             {
                 get
                 {
+                    Debug.Assert((uint)index < _value->NumInterfaces);
+
                     return new EETypePtr(_value->InterfaceMap[index]);
                 }
             }
@@ -460,6 +468,7 @@ namespace System
             {
                 get
                 {
+                    Debug.Assert((uint)index < _argumentCount);
                     return new EETypePtr(_arguments[index]);
                 }
             }

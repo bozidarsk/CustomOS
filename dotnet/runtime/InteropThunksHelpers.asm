@@ -1,18 +1,19 @@
-; bits 64
+global RhGetCurrentThunkContext
+global RhpAcquireThunkPoolLock
+global RhpReleaseThunkPoolLock
 
-; section .data
-; _tls_index: equ 0
-; _tls_array: equ 58h ; offsetof(TEB, ThreadLocalStoragePointer)
-; POINTER_SIZE: equ 08h
-; ThunkParamSlot: dq 0000000000000000H
+section .bss
 
-; section .text
+tls_thunkData: resq 4
 
-; global RhGetCurrentThunkContext
-; RhGetCurrentThunkContext:
-; 	mov r10d, [_tls_index]
-; 	mov r11, gs:[_tls_array]
-; 	mov r10, [r11 + r10 * POINTER_SIZE]
-; 	mov r8, ThunkParamSlot
-; 	mov rax, [r10 + r8] ; rax <- ThunkParamSlot
-; 	ret
+section .text
+
+RhGetCurrentThunkContext:
+	mov rax, tls_thunkData
+	ret
+
+RhpAcquireThunkPoolLock:
+	ret
+
+RhpReleaseThunkPoolLock:
+	ret

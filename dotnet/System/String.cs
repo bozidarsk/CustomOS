@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using Internal.Runtime.CompilerServices;
 
 namespace System;
 
 public sealed class String : IEnumerable, IEnumerable<char>
 {
-	[Intrinsic]
-	public static readonly string Empty = "";
-
 	// The layout of the string type is a contract with the compiler.
 	private int length;
-	internal char firstChar;
+	private char firstChar;
+
+	[Intrinsic]
+	public static readonly string Empty = "";
 
 	public int Length 
 	{
@@ -23,7 +22,7 @@ public sealed class String : IEnumerable, IEnumerable<char>
 	}
 
 	[IndexerName("Chars")]
-	public unsafe char this[int index] 
+	public char this[int index] 
 	{
 		[Intrinsic] get 
 		{
@@ -47,6 +46,34 @@ public sealed class String : IEnumerable, IEnumerable<char>
 			str = str.Replace("{" + i.ToString() + "}", args[i]?.ToString());
 
 		return str;
+	}
+
+	public unsafe string ToUpper() 
+	{
+		char* buffer = stackalloc char[this.Length];
+		for (int i = 0; i < this.Length; i++) 
+		{
+			if (!char.IsAscii(this[i]))
+				throw new NotImplementedException();
+
+			buffer[i] = char.IsAsciiLetterLower(this[i]) ? (char)(this[i] - 0x20) : this[i];
+		}
+
+		return new string(buffer, 0, this.Length);
+	}
+
+	public unsafe string ToLower() 
+	{
+		char* buffer = stackalloc char[this.Length];
+		for (int i = 0; i < this.Length; i++) 
+		{
+			if (!char.IsAscii(this[i]))
+				throw new NotImplementedException();
+
+			buffer[i] = char.IsAsciiLetterUpper(this[i]) ? (char)(this[i] + 0x20) : this[i];
+		}
+
+		return new string(buffer, 0, this.Length);
 	}
 
 	public static string? Concat(string? left, string? mid, string? right) 
@@ -180,7 +207,6 @@ public sealed class String : IEnumerable, IEnumerable<char>
 	public char[] ToCharArray() 
 	{
 		char[] array = new char[this.Length];
-		// array[array.Length - 1] = '\0';
 
 		for (int i = 0; i < this.Length; i++)
 			array[i] = this[i];
@@ -190,8 +216,8 @@ public sealed class String : IEnumerable, IEnumerable<char>
 
 	public override string ToString() => this;
 
-	// public static bool operator == (string left, string right) => left.Equals(right);
-	// public static bool operator != (string left, string right) => !left.Equals(right);
+	public static bool operator == (string left, string right) => left.Equals(right);
+	public static bool operator != (string left, string right) => !left.Equals(right);
 
 	public override bool Equals(object? other) => (other is string) ? this.Equals((string)other) : false;
 	public bool Equals(string? other) 
@@ -209,9 +235,13 @@ public sealed class String : IEnumerable, IEnumerable<char>
 	public override int GetHashCode() 
 	{
 		int hash = 0;
+		ulong power = 1;
 
-		for (int i = 0; i < this.Length; i++)
-			hash += (int)this[i] * (int)Math.Pow(31, (ulong)this.Length - ((ulong)i + 1));
+		for (int i = this.Length - 1; i >= 0; i++) 
+		{
+			hash += (int)this[i] * (int)power;
+			power *= 31;
+		}
 
 		return hash;
 	}
@@ -219,7 +249,7 @@ public sealed class String : IEnumerable, IEnumerable<char>
 	IEnumerator IEnumerable.GetEnumerator() => new CharEnumerator(this);
 	public IEnumerator<char> GetEnumerator() => new CharEnumerator(this);
 
-	internal ref char GetRawStringData() => ref firstChar;
+	public ref char GetPinnableReference() => ref firstChar;
 
 	private static unsafe string Ctor(char* pointer) 
 	{
@@ -230,48 +260,84 @@ public sealed class String : IEnumerable, IEnumerable<char>
 
 	private static unsafe string Ctor(char* pointer, int index, int length) 
 	{
+		if (length < 0 || index < 0 || index >= length)
+			throw new ArgumentOutOfRangeException();
+
 		var et = EETypePtr.EETypePtrOf<string>();
 
 		var start = pointer + index;
-		var data = RuntimeHelpers.RhpNewArray(et.ToPointer(), length);
+		var data = InternalCalls.RhpNewArray(et.ToPointer(), length);
 		var s = Unsafe.As<object, string>(ref data);
 
 		fixed (char* c = &s.firstChar) 
 		{
-			Platform.CopyMemory((IntPtr)c, (IntPtr)start, (ulong)length * sizeof(char));
+			Platform.CopyMemory((nint)c, (nint)start, (uint)length * sizeof(char));
 			c[length] = '\0';
 		}
 
 		return s;
 	}
 
+	private static unsafe string Ctor(sbyte* pointer) 
+	{
+		int index = 0;
+		while (pointer[index++] != '\0') {}
+		return Ctor(pointer, 0, index - 1);
+	}
+
+	private static unsafe string Ctor(sbyte* pointer, int index, int length) 
+	{
+		if (length < 0 || index < 0 || index >= length)
+			throw new ArgumentOutOfRangeException();
+
+		char* array = stackalloc char[length];
+
+		for (int i = 0; i < length; i++)
+			array[i] = (char)pointer[index + i];
+
+		return Ctor(array, 0, length);
+	}
+
 	private static unsafe string Ctor(char[] array) 
 	{
+		if (array == null)
+			throw new NullReferenceException();
+
 		fixed (char* pointer = array)
 			return Ctor(pointer, 0, array.Length);
 	}
 
 	private static unsafe string Ctor(char[] array, int index, int length) 
 	{
+		if (array == null)
+			throw new ArgumentNullException();
+		if (index < 0 || index >= array.Length || length < 0 || length > array.Length)
+			throw new ArgumentOutOfRangeException();
+
 		fixed (char* pointer = array)
 			return Ctor(pointer, index, length);
 	}
 
-	private static string Ctor(char x, int length) 
+	private static unsafe string Ctor(char x, int length) 
 	{
-		char[] array = new char[length];
+		if (length < 0)
+			throw new ArgumentOutOfRangeException();
 
-		for (int i = 0; i < array.Length; i++)
+		char* array = stackalloc char[length];
+
+		for (int i = 0; i < length; i++)
 			array[i] = x;
 
-		return Ctor(array);
+		return Ctor(array, 0, length);
 	}
 
 	#pragma warning disable 824
-	public unsafe extern String(char* pointer, int index, int length);
-	public unsafe extern String(char* pointer);
-	public extern String(char[] array, int index, int length);
-	public extern String(char[] array);
-	public extern String(char c, int length);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(char* pointer);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(char* pointer, int index, int length);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(sbyte* pointer);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(sbyte* pointer, int index, int length);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(char[] array);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(char[] array, int index, int length);
+	[MethodImpl(MethodImplOptions.InternalCall)] public unsafe extern String(char c, int length);
 	#pragma warning restore 824
 }

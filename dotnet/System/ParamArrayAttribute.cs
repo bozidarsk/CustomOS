@@ -3,12 +3,13 @@
 
 namespace System
 {
-    /// <summary>
-    /// Indicates that a method will allow a variable number of arguments in its invocation.
-    /// </summary>
+    // Attribute to indicate array of arguments for variable number of args.
+
     [AttributeUsage(AttributeTargets.Parameter, Inherited = true, AllowMultiple = false)]
-    public sealed class ParamArrayAttribute : Attribute
+    internal class ParamArrayAttribute : Attribute
     {
-        public ParamArrayAttribute() { }
+        public ParamArrayAttribute()
+        {
+        }
     }
 }

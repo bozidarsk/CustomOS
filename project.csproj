@@ -1,96 +1,158 @@
-<Project>
+<!--
 
-  <Target Name="Build">
-    <MakeDir Directories="bin"/>
+dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference to .(.+)./\1/' | sort | uniq
+
+-->
+
+<Project DefaultTargets="Build" InitialTargets="MakeDirectories">
+
+  <PropertyGroup>
+    <DotnetVersion>8.0.0</DotnetVersion> <!-- $([System.Environment]::Version) -->
+    <DotnetPath>~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/$(DotnetVersion)</DotnetPath>
+    <Platform>x64</Platform>
+    <CFLAGS>-c -Wall -Wextra -m64 -ffreestanding -nostdlib -mpreferred-stack-boundary=4 -fno-pie -fno-asynchronous-unwind-tables -fno-stack-protector -Wno-implicit-function-declaration</CFLAGS>
+    <ASMFLAGS>-f elf64</ASMFLAGS>
+    <ILCFLAGS>--targetos linux --targetarch x64 --instruction-set x86-x64 --nopreinitstatics --completetypemetadata --reflectiondata all --stacktracedata --systemmodule dotnet --nativelib --multifile</ILCFLAGS>
+    <LDFLAGS>-m elf_x86_64 -T linker.ld --no-warn-rwx-segment -static -no-pie -nostdlib -L $(DotnetPath)/sdk -L bin/runtime --allow-multiple-definition</LDFLAGS>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RunCommand>dotnet</RunCommand>
+    <RunArguments>msbuild -t:Run</RunArguments>
+  </PropertyGroup>
+
+  <Target Name="BuildDotnet">
+    <PropertyGroup>
+      <ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
+      <DefineConstants>INPLACE_RUNTIME;SYSTEM_PRIVATE_CORELIB;FEATURE_MANAGED_ETW_CHANNELS;FEATURE_MANAGED_ETW;TARGET_UNIX;TARGET_64BIT;TARGET_AMD64;FEATURE_PERFTRACING;FEATURE_COMWRAPPERS;NATIVEAOT;NETCOREAPP;TRACE;TARGET_64BIT;TARGET_UNIX;TARGET_LINUX;NET;NET8_0;NETCOREAPP;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER</DefineConstants>
+      <DisabledWarnings>1701;1702;1705;1591;CS8969;0419;0649;CA2249;CA1830;CS8602;CS8603;CS8604;CS8618;CS8625;CS8632;CS8765;CA1810;CA1823;CA1825;CA1852;CA2208;SA1129;SA1205;SA1400;SA1517;IDE0065;CS3016;AD0001;NU5105;1701;1702</DisabledWarnings>
+      <FileAlignment>512</FileAlignment>
+      <GenerateFullPaths>true</GenerateFullPaths>
+      <HighEntropyVA>true</HighEntropyVA>
+      <LangVersion>preview</LangVersion>
+      <RuntimeMetadataVersion>v4.0.30319</RuntimeMetadataVersion>
+      <WarningLevel>9999</WarningLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Analyzers Include="dotnet/*.dll"/>
+      <CodeAnalysisRuleset Include="dotnet/*.ruleset"/>
+    </ItemGroup>
+
+    <Message Text="Building runtime..." Importance="High"/>
     <Csc 
-      Sources="@(DotNet);@(CS)"
+      Sources="@(Dotnet)"
+      TargetType="library"
+      OutputAssembly="bin/runtime/dotnet.dll"
+      References=""
+
+      ChecksumAlgorithm="$(ChecksumAlgorithm)"
+      DefineConstants="$(DefineConstants)"
+      DisabledWarnings="$(DisabledWarnings)"
+      FileAlignment="$(FileAlignment)"
+      GenerateFullPaths="$(GenerateFullPaths)"
+      HighEntropyVA="$(HighEntropyVA)"
+      LangVersion="$(LangVersion)"
+      Platform="$(Platform)"
+      RuntimeMetadataVersion="$(RuntimeMetadataVersion)"
+      WarningLevel="$(WarningLevel)"
+
       AllowUnsafeBlocks="true"
-      NoStandardLib="true"
+      CheckForOverflowUnderflow="false"
+      DebugType="portable"
+      Deterministic="true"
       NoConfig="true"
       NoLogo="true"
+      NoStandardLib="true"
       NoWin32Manifest="true"
       Nullable="enable"
-      Platform="x64"
-      TargetType="exe"
-      EmitDebugInformation="false"
-      Deterministic="false"
       Optimize="true"
-      OutputAssembly="bin/managed.exe"
-      DisabledWarnings="CS8021"
-      DefineConstants="BITS64;TARGET_X64;TARGET_64BIT;TARGET_AMD64;TARGET_UNIX"
     />
-    <Exec
-      Command="~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/8.0.0/tools/ilc bin/managed.exe -o bin/managed.o --systemmodule managed --targetos linux --targetarch x64 --instruction-set x86-x64"
-    />
-    <Exec
-      Command="gcc %(C.Identity) -o bin/$([System.IO.Path]::GetFileName('%(C.Identity)')).o -I include -c -Wall -Wextra -m64 -ffreestanding -nostdlib -mpreferred-stack-boundary=4 -fno-pie -fno-asynchronous-unwind-tables -fno-stack-protector -Wno-implicit-function-declaration"
-    />
-    <Exec
-      Command="nasm %(ASM.Identity) -o bin/$([System.IO.Path]::GetFileName('%(ASM.Identity)')).o -f elf64"
-    />
-    <Exec
-      Command="nasm %(DotNetRuntime.Identity) -o bin/$([System.IO.Path]::GetFileName('%(DotNetRuntime.Identity)')).o -f elf64"
-    />
-    <Exec
-      Command="ld -m elf_x86_64 -T linker.ld --no-warn-rwx-segment bin/*.o -o bin/kernel.bin"
-    />
+    <Message Text="Runtime -> bin/runtime/dotnet.dll" Importance="High"/>
+    <Exec Command="$(DotnetPath)/tools/ilc bin/runtime/dotnet.dll -o bin/runtime/dotnet.o --map bin/runtime/dotnet.xml $(ILCFLAGS)"/>
+    <Message Text="           bin/runtime/dotnet.o" Importance="High"/>
+    <Exec Command="nasm %(DotnetRuntime.Identity) -o bin/runtime/$([System.IO.Path]::GetFileName('%(DotnetRuntime.Identity)')).o $(ASMFLAGS)"/>
+    <Message Text="           bin/runtime/$([System.IO.Path]::GetFileName('%(DotnetRuntime.Identity)')).o" Importance="High"/>
+    <Exec Command="ar rcs bin/runtime/libdotnet.a bin/runtime/*.o"/>
+    <Message Text="           bin/runtime/libdotnet.a" Importance="High"/>
   </Target>
 
-  <Target Name="Run">
-    <MakeDir Directories="iso;iso/boot;iso/boot/grub"/>
+  <Target Name="Build" DependsOnTargets="BuildDotnet">
+    <Message Text="Building kernel..." Importance="High"/>
+    <Csc 
+      Sources="@(CSharp)"
+      TargetType="library"
+      OutputAssembly="bin/managed.dll"
+      References="bin/runtime/dotnet.dll"
+
+      DefineConstants=""
+      DisabledWarnings=""
+      Platform="$(Platform)"
+
+      AllowUnsafeBlocks="true"
+      CheckForOverflowUnderflow="false"
+      DebugType="portable"
+      Deterministic="true"
+      NoConfig="true"
+      NoLogo="true"
+      NoStandardLib="true"
+      NoWin32Manifest="true"
+      Nullable="enable"
+      Optimize="true"
+    />
+    <Message Text="Kernel -> bin/managed.dll" Importance="High"/>
+    <Exec Command="$(DotnetPath)/tools/ilc bin/managed.dll -o bin/managed.o --map bin/managed.xml --reference bin/runtime/dotnet.dll $(ILCFLAGS)"/>
+    <Message Text="          bin/managed.o" Importance="High"/>
+    <Exec Command="nasm %(Assembly.Identity) -o bin/$([System.IO.Path]::GetFileName('%(Assembly.Identity)')).o $(ASMFLAGS)"/>
+    <Message Text="          bin/$([System.IO.Path]::GetFileName('%(Assembly.Identity)')).o" Importance="High"/>
+    <!-- <Exec Command="ld bin/*.o -l:libdotnet.a -l:libRuntime.WorkstationGC.a -l:libeventpipe-enabled.a -l:libstdc++compat.a -o bin/kernel.bin $(LDFLAGS)"/> -->
+    <Exec Command="ld bin/*.o -l:libdotnet.a -o bin/kernel.bin $(LDFLAGS)"/>
+    <Message Text="          bin/kernel.bin" Importance="High"/>
+  </Target>
+
+  <Target Name="CreateDrive" Condition="$([System.IO.File]::Exists('bin/drive.bin')) != 'true'">
+    <Exec Command="dd if=/dev/zero of=bin/drive.bin bs=1M count=500"/>
+  </Target>
+
+  <Target Name="CopyRunFiles" DependsOnTargets="Build">
     <Copy SourceFiles="grub.cfg" DestinationFolder="iso/boot/grub"/>
     <Copy SourceFiles="bin/kernel.bin" DestinationFolder="iso/boot"/>
 
-    <Exec Command="if [[ $(ls bin/drive.bin) == '' ]]; then dd if=/dev/zero of=bin/drive.bin bs=1M count=500; fi"/>
-
     <Exec Command="grub-mkrescue iso -o bin/kernel.iso"/>
-    <Exec Command="qemu-system-x86_64 -display gtk -drive id=kernel,file=bin/kernel.iso -drive id=drive,file=bin/drive.bin -device ich9-ahci -d int -no-reboot"/>
+  </Target>
+
+  <Target Name="Run" DependsOnTargets="CopyRunFiles;CreateDrive">
+    <Exec Command="qemu-system-x86_64 -display gtk -cpu Skylake-Client-v1 -m 2G -drive id=kernel,file=bin/kernel.iso -drive id=drive,file=bin/drive.bin -device ich9-ahci -d int -no-reboot"/>
   </Target>
 
   <Target Name="Dump">
-    <Exec Directories="objdump -DM intel bin/kernel.bin"/>
+    <Exec Command="objdump -DM intel bin/kernel.bin"/>
   </Target>
 
   <Target Name="Clean">
     <RemoveDir Directories="bin;iso"/>
   </Target>
 
+  <Target Name="MakeDirectories">
+    <MakeDir Directories="bin/runtime"/>
+    <MakeDir Directories="iso/boot/grub"/>
+  </Target>
+
   <ItemGroup>
-    <DotNet Include="dotnet/System/*.cs"/>
-    <DotNet Include="dotnet/System/Reflection/*.cs"/>
-    <DotNet Include="dotnet/System/Numerics/*.cs"/>
-    <DotNet Include="dotnet/System/Threading/*.cs"/>
-    <DotNet Include="dotnet/System/Runtime/*.cs"/>
-    <DotNet Include="dotnet/System/Runtime/CompilerServices/*.cs"/>
-    <DotNet Include="dotnet/System/Runtime/InteropServices/*.cs"/>
-    <DotNet Include="dotnet/System/Runtime/Versioning/*.cs"/>
-    <DotNet Include="dotnet/System/Collections/*.cs"/>
-    <DotNet Include="dotnet/System/Collections/Generic/*.cs"/>
-    <DotNet Include="dotnet/Internal/TypeSystem/*.cs"/>
-    <DotNet Include="dotnet/Internal/NativeFormat/*.cs"/>
-    <DotNet Include="dotnet/Internal/Runtime/*.cs"/>
-    <DotNet Include="dotnet/Internal/Runtime/CompilerServices/*.cs"/>
-    <DotNet Include="dotnet/Internal/Runtime/CompilerHelpers/*.cs"/>
-    <DotNetRuntime Include="dotnet/runtime/*.asm"/>
+    <CSharp Include="FileTypes/**/*.cs" Exclude="FileTypes/ELF/Debug/*.cs"/>
+    <CSharp Include="Boot/**/*.cs"/>
+    <CSharp Include="Kernel/**/*.cs"/>
   </ItemGroup>
 
   <ItemGroup>
-    <CS Include="Kernel/*.cs"/>
-    <CS Include="Kernel/IO/*.cs"/>
-    <CS Include="Kernel/Drivers/PCI/*.cs"/>
-    <CS Include="Kernel/Drivers/AHCI/*.cs"/>
-    <CS Include="Kernel/Interrupts/*.cs"/>
+    <Assembly Include="FileTypes/*.asm"/>
+    <Assembly Include="Boot/**/*.asm"/>
+    <Assembly Include="Kernel/**/*.asm"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ASM Include="Boot/*.asm"/>
-    <ASM Include="Kernel/*.asm"/>
-    <ASM Include="Kernel/IO/*.asm"/>
-    <ASM Include="Kernel/Interrupts/*.asm"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <C Include="Kernel/*.c"/>
+    <DotnetRuntime Include="dotnet/runtime/*.asm"/>
+    <Dotnet Include="dotnet/**/*.cs"/>
   </ItemGroup>
 
 </Project>

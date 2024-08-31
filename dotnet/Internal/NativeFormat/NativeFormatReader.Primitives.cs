@@ -7,6 +7,8 @@
 // Utilities to read native data from images, that are written by the NativeFormatWriter engine
 // ---------------------------------------------------------------------------
 
+using System.Diagnostics;
+
 namespace Internal.NativeFormat
 {
     // Minimal functionality that is low level enough for use in the managed runtime.
@@ -99,6 +101,7 @@ namespace Internal.NativeFormat
             }
             else
             {
+                Debug.Assert(false);
                 return 0;
             }
 
@@ -143,6 +146,7 @@ namespace Internal.NativeFormat
             }
             else
             {
+                Debug.Assert(false);
                 return 0;
             }
 
@@ -165,6 +169,7 @@ namespace Internal.NativeFormat
             }
             else
             {
+                Debug.Assert(false);
                 return 0;
             }
 
@@ -187,6 +192,7 @@ namespace Internal.NativeFormat
             }
             else
             {
+                Debug.Assert(false);
                 return 0;
             }
 

@@ -1,8 +1,7 @@
 using System.Runtime;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Internal.Runtime;
-using Internal.Runtime.CompilerServices;
 
 namespace System;
 
@@ -14,44 +13,15 @@ internal class RawData
 
 public unsafe class Object 
 {
-	#pragma warning disable CS0649
-	private MethodTable* pEEType;
-	#pragma warning restore
+	private MethodTable* m_pEEType;
 
-	public virtual string ToString() => "System.Object";
+	public virtual string ToString() => GetType().ToString();
 	public virtual bool Equals(object? other) => this == other;
 	public virtual int GetHashCode() => this.ToString().GetHashCode();
-	// [Intrinsic] public virtual Type GetType() => Type.GetTypeFromMethodTable(pEEType);
+	public virtual Type GetType() => Type.GetTypeFromMethodTable(m_pEEType);
 
 	public Object() {}
 	~Object() {}
-
-	internal MethodTable* MethodTable => pEEType;
-	internal EETypePtr EETypePtr => new EETypePtr(pEEType);
-
-	[Intrinsic]
-	protected internal object MemberwiseClone() 
-	{
-		object clone = 
-			this.EETypePtr.IsArray
-			? RuntimeHelpers.RhpNewArray(this.MethodTable, Unsafe.As<Array>(this).Length)
-			: RuntimeHelpers.RhpNewFast(this.MethodTable)
-		;
-
-		// copy contents of "this" to the clone
-
-		ulong byteCount = MethodTable->BaseSize - (ulong)(2 * sizeof(IntPtr));
-		if (MethodTable->HasComponentSize)
-			byteCount += (ulong)Unsafe.As<RawArrayData>(this).Length * (ulong)MethodTable->ComponentSize;
-
-		// nuint byteCount = RuntimeHelpers.GetRawObjectDataSize(this);
-		ref byte src = ref this.GetRawData();
-		ref byte dst = ref clone.GetRawData();
-
-		Platform.CopyMemory((IntPtr)Unsafe.AsPointer<byte>(ref dst), (IntPtr)Unsafe.AsPointer<byte>(ref src), byteCount);
-
-		return clone;
-	}
 
 	/// <summary>
 	/// Return beginning of all data (excluding ObjHeader and MethodTable*) within this object.
@@ -59,9 +29,37 @@ public unsafe class Object
 	/// </summary>
 	internal ref byte GetRawData() => ref Unsafe.As<RawData>(this).Data;
 
-	// public void Finalize() 
-	// {
-	// 	var obj = this;
-	// 	Platform.Free(Unsafe.As<object, IntPtr>(ref obj));
-	// }
+	/// <summary>
+	/// Return size of all data (excluding ObjHeader and MethodTable*).
+	/// Note that for strings/arrays this would include the Length as well.
+	/// </summary>
+	internal uint GetRawDataSize() => GetMethodTable()->BaseSize - (uint)sizeof(ObjHeader) - (uint)sizeof(MethodTable*);
+
+	internal unsafe MethodTable* GetMethodTable() => m_pEEType;
+	internal unsafe ref MethodTable* GetMethodTableRef() => ref m_pEEType;
+	internal unsafe EETypePtr GetEETypePtr() => new EETypePtr(m_pEEType);
+
+	[Intrinsic]
+	protected internal object MemberwiseClone() 
+	{
+		object clone = 
+			GetEETypePtr().IsArray
+			? InternalCalls.RhpNewArray(GetMethodTable(), Unsafe.As<Array>(this).Length)
+			: InternalCalls.RhpNewFast(GetMethodTable())
+		;
+
+		// copy contents of "this" to the clone
+
+		uint byteCount = GetMethodTable()->BaseSize - (uint)(2 * sizeof(nint));
+		if (GetMethodTable()->HasComponentSize)
+			byteCount += (uint)Unsafe.As<RawArrayData>(this).Length * (uint)GetMethodTable()->ComponentSize;
+
+		// nuint byteCount = RuntimeHelpers.GetRawObjectDataSize(this);
+		ref byte src = ref this.GetRawData();
+		ref byte dst = ref clone.GetRawData();
+
+		Platform.CopyMemory(ref dst, ref src, byteCount);
+
+		return clone;
+	}
 }

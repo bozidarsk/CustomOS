@@ -1,61 +1,35 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 
 namespace System;
 
 public unsafe readonly struct IntPtr 
 {
-	readonly void* _value;
-
-	public IntPtr(void* value) { _value = value; }
-	public IntPtr(int value) { _value = (void*)value; }
-	public IntPtr(uint value) { _value = (void*)value; }
-	public IntPtr(long value) { _value = (void*)value; }
-	public IntPtr(ulong value) { _value = (void*)value; }
+	private readonly void* value;
 
 	[Intrinsic]
 	public static readonly IntPtr Zero;
+	public static unsafe int Size => sizeof(IntPtr);
 
-	public override int GetHashCode() => (int)this;
-	public override bool Equals(object? other) => (other is IntPtr) ? this.Equals((IntPtr)other) : false;
-	public bool Equals(IntPtr pointer) => _value == pointer._value;
+	public static explicit operator void*(IntPtr x) => x.value;
+	public static explicit operator int(IntPtr x) => (int)x.value;
+	public static explicit operator uint(IntPtr x) => (uint)x.value;
+	public static explicit operator long(IntPtr x) => (long)x.value;
+	public static explicit operator ulong(IntPtr x) => (ulong)x.value;
 
-	//public override int GetHashCode()
-	//	=> (int)_value;
+	public static explicit operator IntPtr(void* x) => new IntPtr(x);
+	public static explicit operator IntPtr(int x) => new IntPtr(x);
+	public static explicit operator IntPtr(uint x) => new IntPtr(x);
+	public static explicit operator IntPtr(long x) => new IntPtr(x);
+	public static explicit operator IntPtr(ulong x) => new IntPtr(x);
 
-	public static explicit operator IntPtr(int value) => new IntPtr(value);
-	public static explicit operator IntPtr(uint value) => new IntPtr(value);
-	public static explicit operator IntPtr(long value) => new IntPtr(value);
-	public static explicit operator IntPtr(ulong value) => new IntPtr(value);
-	public static explicit operator IntPtr(void* value) => new IntPtr(value);
-	public static explicit operator void*(IntPtr value) => value._value;
+	public static bool operator == (IntPtr a, IntPtr b) => a.value == b.value;
+	public static bool operator != (IntPtr a, IntPtr b) => a.value != b.value;
 
-	public static explicit operator int(IntPtr value) {
-		var l = (long)value._value;
+	public static IntPtr operator + (IntPtr a, int b) => new IntPtr((byte*)a.value + b);
+	public static IntPtr operator + (int a, IntPtr b) => new IntPtr((byte*)b.value + a);
 
-		return checked((int)l);
-	}
-
-	public static explicit operator long(IntPtr value) => (long)value._value;
-	public static explicit operator ulong(IntPtr value) => (ulong)value._value;
-
-	public static bool operator == (IntPtr l, IntPtr r) => l.Equals(r);
-	public static bool operator != (IntPtr l, IntPtr r) => !l.Equals(r);
-
-	public static IntPtr operator +(IntPtr a, int b)
-		=> new IntPtr((byte*)a._value + b);
-
-	public static IntPtr operator +(IntPtr a, uint b)
-		=> new IntPtr((byte*)a._value + b);
-
-	public static IntPtr operator +(IntPtr a, ulong b)
-		=> new IntPtr((byte*)a._value + b);
-
-	public static int Size
-	{
-		[NonVersionable]
-		get => sizeof(IntPtr);
-	}
+	public override bool Equals(object? other) => (other is IntPtr) ? ((IntPtr)other).value == value : false;
+	public override int GetHashCode() => (int)value;
 
 	public override unsafe string ToString() 
 	{
@@ -70,4 +44,13 @@ public unsafe readonly struct IntPtr
 
 		return new string(array, 0, length);
 	}
+
+	public IntPtr(void* value) => this.value = value;
+	public IntPtr(int value) => this.value = (void*)value;
+	public IntPtr(uint value) => this.value = (void*)value;
+	public IntPtr(long value) => this.value = (void*)value;
+	public IntPtr(ulong value) => this.value = (void*)value;
 }
+
+
+

@@ -8,9 +8,7 @@ namespace System.Runtime.InteropServices
     {
         public FieldOffsetAttribute(int offset)
         {
-            Value = offset;
         }
-
-        public int Value { get; }
+        public int Value { get { return 0; } }
     }
 }

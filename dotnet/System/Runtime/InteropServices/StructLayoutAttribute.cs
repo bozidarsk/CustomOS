@@ -8,16 +8,12 @@ namespace System.Runtime.InteropServices
     {
         public StructLayoutAttribute(LayoutKind layoutKind)
         {
-            Value = layoutKind;
         }
 
-        public StructLayoutAttribute(short layoutKind)
-        {
-            Value = (LayoutKind)layoutKind;
-        }
-
-        public LayoutKind Value { get; }
-
+        // These fields are expected by C# compiler,
+        // so just disable the 'unused' warning
+#pragma warning disable 649
+        public LayoutKind Value;
         public int Pack;
         public int Size;
         public CharSet CharSet;

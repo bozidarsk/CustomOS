@@ -1,30 +1,58 @@
 namespace System;
 
-[Serializable]
 public readonly struct SByte 
 {
 	public const sbyte MaxValue = 0x7f;
 	public const sbyte MinValue = unchecked((sbyte)0x80);
+	private const int MaxStringLength = 3;
+
+	public static sbyte Parse(string? str) => TryParse(str, out sbyte result) ? result : throw new FormatException();
+	public static unsafe bool TryParse(string? str, out sbyte result) 
+	{
+		result = 0;
+
+		if (str == null || str.Length == 0 || (str.Length > MaxStringLength && str[0] != '-') || (str.Length > MaxStringLength + 1 && str[0] == '-'))
+			return false;
+
+		bool isNegative = str[0] == '-';
+
+		for (int i = isNegative ? 1 : 0; i < str.Length; i++) 
+		{
+			if (!char.IsAsciiDigit(str[i]))
+				return false;
+
+			result *= 10;
+			result += (sbyte)(str[i] - 0x30);
+		}
+
+		if (isNegative)
+			result *= -1;
+
+		return true;
+	}
 
 	public override int GetHashCode() => (int)this;
 	public override unsafe string ToString() 
 	{
-		char* array = stackalloc char[20];
-		int index = 20 - 1;
+		char* buffer = stackalloc char[1 + MaxStringLength + 1];
+		buffer += 1 + MaxStringLength + 1;
+		*buffer = '\0';
+
 		var x = this;
 
 		do 
 		{
-			var digit = x % 10;
-			array[index--] = (char)((digit < 0 ? -digit : digit) + 0x30);
+			buffer--;
+			*buffer = (char)(Math.Abs((int)(x % 10)) + 0x30);
 			x /= 10;
 		} while (x != 0);
 
-		if (this < 0)
-			array[index] = '-';
-		else
-			index++;
+		if (this < 0) 
+		{
+			buffer--;
+			*buffer = '-';
+		}
 
-		return new string(array, index, 20 - index);
+		return new string(buffer);
 	}
 }
