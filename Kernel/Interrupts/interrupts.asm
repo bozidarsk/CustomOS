@@ -69,23 +69,23 @@ isrhandler_table:
 
 section .text
 
-; void loadidt(nint table)
+; void loadidt(InterruptDescriptorTable* table)
 loadidt:
 	lidt [rdi]
 	sti
 	ret
 
-; nint getisr(int index)
+; void* getisr(int index)
 getisr:
 	mov rax, qword [isr_table + edi * 8]
 	ret
 
-; void getisrhandler(int index, nint handler)
+; void getisrhandler(int index, void* handler)
 setisrhandler:
 	mov qword [isrhandler_table + edi * 8], rsi
 	ret
 
-; nint getisrhandler(int index)
+; void* getisrhandler(int index)
 getisrhandler:
 	mov rax, qword [isrhandler_table + edi * 8]
 	ret
