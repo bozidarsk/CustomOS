@@ -1,5 +1,3 @@
-bits 64
-
 global outd
 global outw
 global outb
