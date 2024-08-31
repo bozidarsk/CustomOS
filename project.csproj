@@ -10,10 +10,9 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
     <DotnetVersion>8.0.0</DotnetVersion> <!-- $([System.Environment]::Version) -->
     <DotnetPath>~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/$(DotnetVersion)</DotnetPath>
     <Platform>x64</Platform>
-    <CFLAGS>-c -Wall -Wextra -m64 -ffreestanding -nostdlib -mpreferred-stack-boundary=4 -fno-pie -fno-asynchronous-unwind-tables -fno-stack-protector -Wno-implicit-function-declaration</CFLAGS>
     <ASMFLAGS>-f elf64</ASMFLAGS>
     <ILCFLAGS>--targetos linux --targetarch x64 --instruction-set x86-x64 --nopreinitstatics --completetypemetadata --reflectiondata all --stacktracedata --systemmodule dotnet --nativelib --multifile</ILCFLAGS>
-    <LDFLAGS>-m elf_x86_64 -T linker.ld --no-warn-rwx-segment -static -no-pie -nostdlib -L $(DotnetPath)/sdk -L bin/runtime --allow-multiple-definition</LDFLAGS>
+    <LDFLAGS>-m elf_x86_64 -T linker.ld -static -no-pie -nostdlib -L $(DotnetPath)/sdk -L bin/runtime --allow-multiple-definition</LDFLAGS>
   </PropertyGroup>
 
   <PropertyGroup>

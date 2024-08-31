@@ -5,7 +5,7 @@ global gdt64.descriptor
 global getkernelend
 
 extern kmain
-extern KERNEL_END
+extern KERNELEND
 
 section .rodata
 
@@ -22,7 +22,7 @@ section .text
 
 ; nint getkernelend()
 getkernelend:
-	mov rax, KERNEL_END
+	mov rax, KERNELEND
 	ret
 
 ; rdi contains saved multiboot info address
