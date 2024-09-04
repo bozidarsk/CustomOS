@@ -121,7 +121,7 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
   </Target>
 
   <Target Name="Run" DependsOnTargets="CopyRunFiles;CreateDrive">
-    <Exec Command="qemu-system-x86_64 -display gtk -cpu Skylake-Client-v1 -m 2G -drive id=kernel,file=bin/kernel.iso -drive id=drive,file=bin/drive.bin -device ich9-ahci -d int -no-reboot"/>
+    <Exec Command="qemu-system-x86_64 -nodefaults -enable-kvm -machine q35 -audio driver=pipewire,model=hda -vga cirrus -display gtk -cpu host -m 2G -drive id=kernel,format=file,file=bin/kernel.iso -drive id=drive,format=file,file=bin/drive.bin -device usb-ehci -device igb -device hda-micro,audiodev=audiodev0 -device usb-kbd -device usb-mouse -device ich9-ahci -d int -no-reboot -no-shutdown"/>
   </Target>
 
   <Target Name="Dump">
