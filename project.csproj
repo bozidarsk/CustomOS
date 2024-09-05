@@ -76,7 +76,7 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
     <Message Text="           bin/runtime/libdotnet.a" Importance="High"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="BuildDotnet" Inputs="@(CSharp);@(Assembly)" Outputs="bin/kernel.bin">
+  <Target Name="Build" DependsOnTargets="BuildDotnet" Inputs="@(CSharp);@(Assembly);bin/libdotnet.a" Outputs="bin/kernel.bin">
     <Message Text="Building kernel..." Importance="High"/>
     <Csc 
       Sources="@(CSharp)"
