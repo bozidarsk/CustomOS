@@ -20,7 +20,7 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
     <RunArguments>msbuild -t:Run</RunArguments>
   </PropertyGroup>
 
-  <Target Name="BuildDotnet">
+  <Target Name="BuildDotnet" Inputs="@(Dotnet);@(DotnetRuntime)" Outputs="bin/runtime/libdotnet.a">
     <PropertyGroup>
       <ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
       <DefineConstants>INPLACE_RUNTIME;SYSTEM_PRIVATE_CORELIB;FEATURE_MANAGED_ETW_CHANNELS;FEATURE_MANAGED_ETW;TARGET_UNIX;TARGET_64BIT;TARGET_AMD64;FEATURE_PERFTRACING;FEATURE_COMWRAPPERS;NATIVEAOT;NETCOREAPP;TRACE;TARGET_64BIT;TARGET_UNIX;TARGET_LINUX;NET;NET8_0;NETCOREAPP;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP1_0_OR_GREATER;NETCOREAPP1_1_OR_GREATER;NETCOREAPP2_0_OR_GREATER;NETCOREAPP2_1_OR_GREATER;NETCOREAPP2_2_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER</DefineConstants>
@@ -76,7 +76,7 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
     <Message Text="           bin/runtime/libdotnet.a" Importance="High"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="BuildDotnet">
+  <Target Name="Build" DependsOnTargets="BuildDotnet" Inputs="@(CSharp);@(Assembly)" Outputs="bin/kernel.bin">
     <Message Text="Building kernel..." Importance="High"/>
     <Csc 
       Sources="@(CSharp)"
@@ -113,14 +113,14 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
     <Exec Command="dd if=/dev/zero of=bin/drive.bin bs=1M count=500"/>
   </Target>
 
-  <Target Name="CopyRunFiles" DependsOnTargets="Build">
+  <Target Name="MakeRunFiles" DependsOnTargets="Build" Inputs="grub.cfg;bin/kernel.bin" Outputs="bin/kernel.iso">
     <Copy SourceFiles="grub.cfg" DestinationFolder="iso/boot/grub"/>
     <Copy SourceFiles="bin/kernel.bin" DestinationFolder="iso/boot"/>
 
     <Exec Command="grub-mkrescue iso -o bin/kernel.iso"/>
   </Target>
 
-  <Target Name="Run" DependsOnTargets="CopyRunFiles;CreateDrive">
+  <Target Name="Run" DependsOnTargets="MakeRunFiles;CreateDrive">
     <Exec Command="qemu-system-x86_64 -nodefaults -enable-kvm -machine q35 -audio driver=pipewire,model=hda -vga cirrus -display gtk -cpu host -m 2G -drive id=kernel,format=file,file=bin/kernel.iso -drive id=drive,format=file,file=bin/drive.bin -device usb-ehci -device igb -device hda-micro,audiodev=audiodev0 -device usb-kbd -device usb-mouse -device ich9-ahci -d int -no-reboot -no-shutdown"/>
   </Target>
 
