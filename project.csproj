@@ -7,6 +7,7 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
 <Project DefaultTargets="Build" InitialTargets="MakeDirectories">
 
   <PropertyGroup>
+    <Configuration>Release</Configuration> <!-- Release|Debug -->
     <DotnetVersion>8.0.0</DotnetVersion> <!-- $([System.Environment]::Version) -->
     <DotnetPath>~/.nuget/packages/runtime.linux-x64.microsoft.dotnet.ilcompiler/$(DotnetVersion)</DotnetPath>
     <Platform>x64</Platform>
@@ -121,7 +122,12 @@ dotnet build | grep "undefined reference to" | sed -E 's/.+undefined reference t
   </Target>
 
   <Target Name="Run" DependsOnTargets="MakeRunFiles;CreateDrive">
-    <Exec Command="qemu-system-x86_64 -nodefaults -enable-kvm -machine q35 -audio driver=pipewire,model=hda -vga cirrus -display gtk -cpu host -m 2G -drive id=kernel,format=file,file=bin/kernel.iso -drive id=drive,format=file,file=bin/drive.bin -device usb-ehci -device igb -device hda-micro,audiodev=audiodev0 -device usb-kbd -device usb-mouse -device ich9-ahci -d int -no-reboot -no-shutdown"/>
+    <PropertyGroup>
+      <ExtraArguments Condition="$(Configuration) == 'Release'">-enable-kvm -cpu host</ExtraArguments>
+      <ExtraArguments Condition="$(Configuration) == 'Debug'">-s -S</ExtraArguments>
+    </PropertyGroup>
+
+    <Exec Command="qemu-system-x86_64 -nodefaults -machine q35 -audio driver=pipewire,model=hda -vga cirrus -display gtk -m 4G -drive id=kernel,format=file,file=bin/kernel.iso -drive id=drive,format=file,file=bin/drive.bin -device usb-ehci -device igb -device hda-micro,audiodev=audiodev0 -device usb-kbd -device usb-mouse -device ich9-ahci -d int -no-reboot -no-shutdown -serial stdio $(ExtraArguments)"/>
   </Target>
 
   <Target Name="Dump">
