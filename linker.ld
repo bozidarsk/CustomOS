@@ -1,9 +1,10 @@
-ENTRY(_start)
+ENTRY(_start32)
 
-/* https://docs.oracle.com/cd/E19683-01/816-1386/chapter6-83432/index.html */
 PHDRS 
 {
    multiboot PT_LOAD FLAGS (4);
+   stack PT_LOAD FLAGS (6);
+   framebuffer PT_LOAD FLAGS (6);
    text PT_LOAD FLAGS (5);
    rodata PT_LOAD FLAGS (4);
    data PT_LOAD FLAGS (6);
@@ -11,12 +12,26 @@ PHDRS
 
 SECTIONS 
 {
-	. = 1M;
-
 	.multiboot ALIGN(8) : 
 	{
 		*(.multiboot)
 	} :multiboot
+
+	. = 2 * 4K;
+
+	.stack ALIGN(16) : 
+	{
+		KEEP(*(.stack))
+	} :stack
+	. += 3 * 2M;
+	PROVIDE(STACKTOP = .); /* location must be less than uint.MaxValue (mov esp, STACKTOP), see Boot/boot.asm */
+
+	PROVIDE(CONSOLEBUFFER = .);
+	.framebuffer : 
+	{
+		KEEP(*(.framebuffer))
+	} :framebuffer
+	. += 3 * 2M;
 
 	.text : 
 	{

@@ -1,7 +1,9 @@
 bits 32
 
-global _start
+global _start32
+
 extern _start64
+extern STACKTOP
 
 section .rodata
 
@@ -20,19 +22,15 @@ multiboot_address: resb 8
 alignb 4096
 page_table_l4: resb 4096
 page_table_l3: resb 4096
-page_table_l2: resb 4096
 
-alignb 16
-resb (2 * 1024 * 1024)
-stack:
+section .stack
 
 section .text
 
-_start:
+_start32:
 	cli
 
-	mov esp, stack
-
+	mov esp, STACKTOP
 
 	mov esi, ebx
 	mov ecx, [esi]
@@ -77,16 +75,12 @@ setup_page_tables:
 	or eax, 0b11
 	mov [page_table_l4], eax
 
-	mov eax, page_table_l2 
-	or eax, 0b11
-	mov [page_table_l3], eax
-
-	mov ecx, 0
+	xor ecx, ecx
 	.loop: ; ecx = 0; ecx <= 512; ecx++
-	mov eax, 0x200000
+	mov eax, 1 * 1024 * 1024 * 1024
 	mul ecx
 	or eax, 0b10000011
-	mov [page_table_l2 + ecx * 8], eax
+	mov [page_table_l3 + ecx * 8], eax
 	inc ecx
 	cmp ecx, 512
 	jne .loop
