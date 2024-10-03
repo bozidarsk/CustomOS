@@ -129,7 +129,18 @@ public readonly struct VBEInfo
 	public unsafe void* ModeInfo { get { fixed (byte* ptr = &controlInfo) { return ptr; } } }
 }
 
-// 3.6.12 Framebuffer info
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public readonly struct FramebufferInfo 
+{
+	public readonly TagType Type;
+	public readonly uint Size;
+	public readonly ulong Address;
+	public readonly uint Pitch;
+	public readonly uint Width;
+	public readonly uint Height;
+	public readonly byte Depth;
+	public readonly byte BufferType;
+}
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct EFI32SystemTable 

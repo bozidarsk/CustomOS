@@ -12,7 +12,7 @@ public enum TagType : uint
 	BootLoader = 2,
 	APMTable = 10,
 	VBEInfo = 7,
-	// 3.6.12 Framebuffer info
+	FramebufferInfo = 8,
 	EFI32SystemTable = 11,
 	EFI64SystemTable = 12,
 	// 3.6.15 SMBIOS tables

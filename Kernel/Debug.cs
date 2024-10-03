@@ -5,7 +5,7 @@ namespace Kernel;
 
 public static unsafe class Debug 
 {
-	[Import] private static extern void writechars(char* pointer);
+	[Import] private static extern void consolewrite(char* pointer, byte color);
 	[Import] private static extern void* getkernelend();
 	[Import] private static extern ulong getrbp();
 
@@ -40,7 +40,7 @@ public static unsafe class Debug
 	public static void putc(byte c) 
 	{
 		char* buffer = stackalloc char[2] { (char)c, '\0' };
-		writechars(buffer);
+		consolewrite(buffer, 0x0f);
 	}
 
 	[Export("puts")]
@@ -51,7 +51,7 @@ public static unsafe class Debug
 		char* buffer = stackalloc char[length + 1];
 		buffer[length] = '\0';
 		for (int i = 0; i < length; i++) { buffer[i] = (char)s[i]; }
-		writechars(buffer);
+		consolewrite(buffer, 0x0f);
 	}
 
 	[Export("printhex")]
@@ -68,7 +68,7 @@ public static unsafe class Debug
 			int digit = (int)((ulong)hex >> ((length - i - 1) * 4)) & 0xf;
 			array[i] = (char)(digit + ((digit >= 0xa) ? (0x61 - 0xa) : 0x30));
 		}
-		writechars(array);
+		consolewrite(array, 0x0f);
 		putc(0x0a);
 	}
 

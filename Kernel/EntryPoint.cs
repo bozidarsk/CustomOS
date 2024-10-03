@@ -2,12 +2,16 @@ using System;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 using Kernel.IO;
 using Kernel.Drivers.PCI;
-using Kernel.Drivers.AHCI;
+using Kernel.Drivers.Video;
 using Kernel.Interrupts;
 using Boot.Multiboot;
+
+using Console = System.Console;
+using KernelConsole = Kernel.Drivers.Video.Console;
 
 namespace Kernel;
 
@@ -113,21 +117,29 @@ public static class EntryPoint
 
 	[Export("kmain")]
 	private static unsafe void Main(nint bootinfo) 
-	{
+	{		
 		Console.ForegroundColor = ConsoleColor.White;
 
+		FramebufferInfo* framebuffer = default;
+		for (CommonTag* tag = (CommonTag*)(bootinfo + 8); tag->Type != TagType.End; tag += ((tag->Size % 8 != 0) ? ((tag->Size / 8) + 1) * 8 : tag->Size) / 8)
+			switch (tag->Type) 
+			{
+				case TagType.FramebufferInfo:
+					framebuffer = (FramebufferInfo*)tag;
+					break;
+			}
+
+		if (framebuffer == default)
+			throw new NullReferenceException("Multiboot FramebufferInfo tag missing.");
+
+		KernelConsole.CharSize = (8, 16);
+		KernelConsole.ColorMode = ColorMode.RGB;
+		KernelConsole.VideoMode = VideoMode.VGAGraphics;
+		KernelConsole.Framebuffer = (nint)framebuffer->Address;
+		KernelConsole.Size = ((int)framebuffer->Width / KernelConsole.CharWidth, (int)framebuffer->Height / KernelConsole.CharHeight);
+		KernelConsole.Pitch = (int)framebuffer->Pitch;
+		KernelConsole.Depth = framebuffer->Depth;
+
 		SetupInterrupts();
-
-		// SetupPCIDevices();
-
-		// byte* data = stackalloc byte[512 * 2];
-		// if (AHCI.TryRead(0, 0, 0ul, 2, (nint)data)) 
-		// {
-		// 	Console.WriteLine("success");
-		// }
-		// else
-		// 	Console.WriteLine("error");
-
-		// throw new Exception();
 	}
 }
