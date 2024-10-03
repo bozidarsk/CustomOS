@@ -7,10 +7,12 @@ The build, run and clean scripts are made for linux. (for Windows see below)<br/
 - dotnet-sdk
 - lttng-ust
 - nasm
+- python-pillow
 ### Run
 - qemu-system-x86
 - qemu-ui-gtk
 - grub-mkrescue
+- qemu-audio-pipewire
 
 ## Working in Windows
 Based on [this](https://www.youtube.com/watch?v=4SZXbl9KVsw) tutorial.<br/>
