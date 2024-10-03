@@ -99,25 +99,9 @@ public static class EntryPoint
 		}
 	}
 
-	private static void SetupStorageDevice(GeneralDevice device) 
-	{
-		if (device == null)
-			throw new ArgumentNullException();
-
-		switch (device.SubClass) 
-		{
-			case DeviceSubClass.ATAController:
-			case DeviceSubClass.SerialATAController:
-				AHCI.AddDevice(device);
-				break;
-			default:
-				throw new NotImplementedException();
-		}
-	}
-
 	[Export("kmain")]
 	private static unsafe void Main(nint bootinfo) 
-	{		
+	{
 		Console.ForegroundColor = ConsoleColor.White;
 
 		FramebufferInfo* framebuffer = default;
