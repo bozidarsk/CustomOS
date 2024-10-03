@@ -1,10 +1,16 @@
 global _start64
 global getkernelend
+global stop
 
 extern kmain
 extern KERNELEND
 
 section .text
+
+; void stop()
+stop:
+	cli
+	hlt
 
 ; nint getkernelend()
 getkernelend:

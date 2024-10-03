@@ -28,7 +28,7 @@ public static class DefaultInterruptHandlers
 		Console.WriteLine($"rflags: 0x{(nint)registers.rflags/*:x16*/}");
 	}
 
-	public static int Exception(int index, Registers registers, ulong error) 
+	public static void Exception(int index, Registers registers, ulong error) 
 	{
 		string[] names = 
 		{
@@ -58,11 +58,9 @@ public static class DefaultInterruptHandlers
 
 		Console.WriteLine($"Exception '{names[index]}' occured.");
 		DumpRegisters(registers);
-
-		return (index << 1) | 1;
 	}
 
-	public static int InterruptRequest(int index, Registers registers, ulong error) 
+	public static void InterruptRequest(int index, Registers registers, ulong error) 
 	{
 		string[] names = 
 		{
@@ -86,15 +84,11 @@ public static class DefaultInterruptHandlers
 
 		int irq = index - PIC.Offset;
 		Console.WriteLine($"Interrupt request '{names[irq]}' occured.");
-
-		return 0;
 	}
 
-	public static int Unused(Registers registers, ulong error) 
+	public static void Unused(Registers registers, ulong error) 
 	{
 		Console.WriteLine("Unused interrupt occured.");
 		DumpRegisters(registers);
-
-		return 0;
 	}
 }

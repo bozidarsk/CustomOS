@@ -6,7 +6,6 @@ global getisrhandler
 extern sendeoi
 extern memcpy
 extern panic
-extern Int32__ToString
 extern Int64__ToString
 extern String__Concat
 extern _ZTV6String
@@ -56,7 +55,9 @@ registers:
 	.rip: resq 1
 	.rflags: resq 1
 
-registers_size: equ ($ - registers) + (($ - registers) % 16) ; for alignment
+registers_size: equ ($ - registers) + (16 - (($ - registers) % 16)) ; for alignment
+
+rsp_alignment: resq 1
 
 section .data
 
@@ -98,7 +99,6 @@ isr_common:
 	mov [registers.rsi], rsi
 	mov [registers.rdi], rdi
 	mov [registers.rbp], rbp
-	mov [registers.rsp], rsp
 	mov [registers.r8], r8
 	mov [registers.r9], r9
 	mov [registers.r10], r10
@@ -113,7 +113,20 @@ isr_common:
 	; rbp == handler
 	; rbp + 8 == index
 	; rbp + 16 == error
+	; rbp + 24 == rip
+	; rbp + 32 == cs
+	; rbp + 40 == rflags
+	; rbp + 48 == rsp
+	; rbp + 56 == ss
 
+	; align stack to 16 bytes
+	mov rax, rsp
+	and rax, 0xf
+	sub rsp, rax
+	mov qword [rsp_alignment], rax
+
+	mov rax, qword [rbp + 48]
+	mov qword [registers.rsp], rax
 	mov rax, qword [rbp + 24]
 	mov qword [registers.rip], rax
 	mov rax, qword [rbp + 40]
@@ -127,38 +140,29 @@ isr_common:
 	jnz .callhandler
 	jmp .error_notfound
 
-	.error:
-	cmp eax, 0x03
-	je .error_throwexception
-
-	mov edi, eax
-	call Int32__ToString
-	mov rdi, rax
-	mov rsi, string_dot
-	call String__Concat
-	mov rdi, string_failed
-	mov rsi, rax
-	call String__Concat
-	mov rdi, rax
-	xor rsi, rsi
-	jmp panic
 
 	.error_throwexception:
 	mov rdi, qword [registers.rdi]
 	mov rsi, qword [registers.rsi]
+	mov rsp, [registers.rsp]
+	mov rbp, [registers.rbp]
 	jmp panic
 
 	.error_notfound:
-	mov rdi, qword [rbp + 8]
+	lea rdi, [rbp + 8]
 	call Int64__ToString
 	mov rdi, rax
 	mov rsi, string_dot
+	xor rdx, rdx
 	call String__Concat
 	mov rdi, string_notfound
 	mov rsi, rax
+	xor rdx, rdx
 	call String__Concat
 	mov rdi, rax
 	xor rsi, rsi
+	mov rsp, [registers.rsp]
+	mov rbp, [registers.rbp]
 	jmp panic
 
 
@@ -169,15 +173,12 @@ isr_common:
 	mov rdx, registers_size
 	call memcpy
 
+	mov rdi, rsp
 	mov rsi, qword [rbp + 16]
 	call qword [rbp]
 
-	; if lsb == 1 then jmp error with interrupt number == eax >> 1
-	mov ebx, eax
-	shr eax, 1
-	and ebx, 1
-	cmp ebx, 0
-	jnz .error
+	cmp qword [rbp + 8], 3
+	je .error_throwexception
 
 
 	mov rdi, qword [rbp + 8]
@@ -191,7 +192,6 @@ isr_common:
 	mov rsi, [registers.rsi]
 	mov rdi, [registers.rdi]
 	mov rbp, [registers.rbp]
-	mov rsp, [registers.rsp]
 	mov r8, [registers.r8]
 	mov r9, [registers.r9]
 	mov r10, [registers.r10]
@@ -201,7 +201,8 @@ isr_common:
 	mov r14, [registers.r14]
 	mov r15, [registers.r15]
 
-	add rsp, 16 ; index, error
+	add rsp, registers_size + 8 + 8 + 8 ; registers, handler, index, error
+	add rsp, qword [rsp_alignment]
 	iretq
 
 %macro isr_noerror 1

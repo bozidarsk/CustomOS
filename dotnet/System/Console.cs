@@ -1,4 +1,5 @@
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 namespace System;
@@ -8,46 +9,18 @@ public static class Console
 	public static ConsoleColor ForegroundColor { set; get; } = ConsoleColor.White;
 	public static ConsoleColor BackgroundColor { set; get; } = ConsoleColor.Black;
 
-	private const int WIDTH = 80;
-	private const int HEIGHT = 25;
-	private static int x = 0;
-	private static int y = 0;
+	[DllImport("*", EntryPoint = "consolewrite")]
+	private static unsafe extern void WriteChars(char* chars, byte color);
 
-	[RuntimeExport("writechars")]
-	private static unsafe void WriteChars(char* chars) 
-	{
-		ushort* buffer = (ushort*)0xb8000;
-		ushort color = (ushort)((((ushort)BackgroundColor << 4) | (ushort)ForegroundColor) << 8);
+	[DllImport("*", EntryPoint = "consoleclear")]
+	public static unsafe extern void Clear();
 
-		for (int i = 0; chars[i] != '\0'; i++) 
-		{
-
-			if (x >= WIDTH) 
-			{
-				x = 0;
-				y++;
-			}
-
-			switch (chars[i]) 
-			{
-				case '\n':
-					x = 0;
-					y++;
-					break;
-				default:
-					buffer[y * WIDTH + x++] = (ushort)(color | (chars[i] & 0xff));
-					break;
-			}
-		}
-	}
-
-	[RuntimeExport("writestring")]
 	private static unsafe void WriteString(string? str) 
 	{
 		if (str == null)
 			return;
 
-		WriteChars((char*)Unsafe.AsPointer<char>(ref str.GetPinnableReference()));
+		WriteChars((char*)Unsafe.AsPointer<char>(ref str.GetPinnableReference()), (byte)(((byte)BackgroundColor << 4) | (byte)ForegroundColor));
 	}
 
 	public static void Write(string format, params object?[]? args) => WriteString(string.Format(format, args));

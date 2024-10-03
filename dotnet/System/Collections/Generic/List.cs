@@ -5,7 +5,7 @@ namespace System.Collections.Generic;
 
 #pragma warning disable CS8600, CS8601, CS8604
 
-public class List<T> : IList, IList<T>, IReadOnlyCollection<T>
+public class List<T> : IList, IList<T>, IReadOnlyList<T>
 {
 	private T[] array;
 	private int next;
