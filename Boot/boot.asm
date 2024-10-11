@@ -22,6 +22,8 @@ multiboot_address: resb 8
 alignb 4096
 page_table_l4: resb 4096
 page_table_l3: resb 4096
+page_table_l2: resb 4096
+page_table_l1: resb 4096
 
 section .stack
 
@@ -75,15 +77,47 @@ setup_page_tables:
 	or eax, 0b11
 	mov [page_table_l4], eax
 
-	xor ecx, ecx
-	.loop: ; ecx = 0; ecx <= 512; ecx++
+	mov eax, page_table_l2
+	or eax, 0b11
+	mov [page_table_l3], eax
+
+	mov eax, page_table_l1
+	or eax, 0b11
+	mov [page_table_l2], eax
+
+	mov ecx, 1
+	.loop1G: ; ecx = 1; ecx < 512; ecx++
 	mov eax, 1 * 1024 * 1024 * 1024
 	mul ecx
 	or eax, 0b10000011
 	mov [page_table_l3 + ecx * 8], eax
 	inc ecx
 	cmp ecx, 512
-	jne .loop
+	jb .loop1G
+
+	mov ecx, 1
+	.loop2M: ; ecx = 1; ecx < 512; ecx++
+	mov eax, 2 * 1024 * 1024
+	mul ecx
+	or eax, 0b10000011
+	mov [page_table_l2 + ecx * 8], eax
+	inc ecx
+	cmp ecx, 512
+	jb .loop2M
+
+	xor ecx, ecx
+	.loop4K: ; ecx = 0; ecx < 512; ecx++
+	mov eax, 4 * 1024
+	mul ecx
+	test ecx, ecx
+	jz .nopresent2K
+	or eax, 1
+	.nopresent2K:
+	or eax, 0b10000010
+	mov [page_table_l1 + ecx * 8], eax
+	inc ecx
+	cmp ecx, 512
+	jb .loop4K
 
 	ret
 
@@ -123,7 +157,5 @@ enter_long_mode:
 	jmp $gdt.code_segment:_start64
 
 error:
-	mov dword [0xb8000], 0x04720465
-	mov dword [0xb8004], 0x00000472
 	cli
 	hlt

@@ -17,6 +17,13 @@ public class SystemException : Exception
 	public SystemException(string? message, Exception? innerException) : base(message, innerException) {}
 }
 
+public class StackOverflowException : SystemException
+{
+	public StackOverflowException() : base("Operation caused a stack overflow.") {}
+	public StackOverflowException(string? message) : base(message) {}
+	public StackOverflowException(string? message, Exception? innerException) : base(message, innerException) {}
+}
+
 public class NullReferenceException : SystemException
 {
 	public NullReferenceException() : base("Object reference not set to a instance of an object.") {}

@@ -1,31 +1,31 @@
 using System;
+using System.Runtime;
 
 using Kernel.IO;
 
 namespace Kernel.Interrupts;
 
+#pragma warning disable CS8500
+
 public static class DefaultInterruptHandlers 
 {
-	private static void DumpRegisters(Registers registers) 
+	[Import] private static extern unsafe void loadpanic(ulong rdi, ulong rsi, ulong rbp, ulong rsp);
+
+	public static unsafe void ThrowException(Registers registers, ulong error) 
 	{
-		Console.WriteLine($"rax: 0x{(nint)registers.rax/*:x16*/}");
-		Console.WriteLine($"rbx: 0x{(nint)registers.rbx/*:x16*/}");
-		Console.WriteLine($"rcx: 0x{(nint)registers.rcx/*:x16*/}");
-		Console.WriteLine($"rdx: 0x{(nint)registers.rdx/*:x16*/}");
-		Console.WriteLine($"rsi: 0x{(nint)registers.rsi/*:x16*/}");
-		Console.WriteLine($"rdi: 0x{(nint)registers.rdi/*:x16*/}");
-		Console.WriteLine($"rbp: 0x{(nint)registers.rbp/*:x16*/}");
-		Console.WriteLine($"rsp: 0x{(nint)registers.rsp/*:x16*/}");
-		Console.WriteLine($"r8: 0x{(nint)registers.r8/*:x16*/}");
-		Console.WriteLine($"r9: 0x{(nint)registers.r9/*:x16*/}");
-		Console.WriteLine($"r10: 0x{(nint)registers.r10/*:x16*/}");
-		Console.WriteLine($"r11: 0x{(nint)registers.r11/*:x16*/}");
-		Console.WriteLine($"r12: 0x{(nint)registers.r12/*:x16*/}");
-		Console.WriteLine($"r13: 0x{(nint)registers.r13/*:x16*/}");
-		Console.WriteLine($"r14: 0x{(nint)registers.r14/*:x16*/}");
-		Console.WriteLine($"r15: 0x{(nint)registers.r15/*:x16*/}");
-		Console.WriteLine($"rip: 0x{(nint)registers.rip/*:x16*/}");
-		Console.WriteLine($"rflags: 0x{(nint)registers.rflags/*:x16*/}");
+		Console.WriteLine("Exception '#BP Breakpoint' occured.");
+		Console.WriteLine(registers);
+		loadpanic(registers.rdi, registers.rsi, registers.rbp, registers.rsp);
+	}
+
+	public static void PageFault(Registers registers, ulong error) 
+	{
+		Console.WriteLine("Exception '#PF Page Fault' occured.");
+		Console.WriteLine(registers);
+		ExceptionHandling.Panic(
+			RuntimeExceptionHelpers.GetStringForFailFastReason(RhFailFastReason.UnhandledException),
+			(error == 0) ? new NullReferenceException() : new StackOverflowException()
+		);
 	}
 
 	public static void Exception(int index, Registers registers, ulong error) 
@@ -57,7 +57,7 @@ public static class DefaultInterruptHandlers
 		};
 
 		Console.WriteLine($"Exception '{names[index]}' occured.");
-		DumpRegisters(registers);
+		Console.WriteLine(registers);
 	}
 
 	public static void InterruptRequest(int index, Registers registers, ulong error) 
@@ -89,6 +89,6 @@ public static class DefaultInterruptHandlers
 	public static void Unused(Registers registers, ulong error) 
 	{
 		Console.WriteLine("Unused interrupt occured.");
-		DumpRegisters(registers);
+		Console.WriteLine(registers);
 	}
 }

@@ -26,8 +26,6 @@ _start64:
 	mov fs, ax
 	mov gs, ax
 
-	mov dword [0xb8000], 0x0a6b0a6f
-
 	mov rax, cr0
 	or rax, 1 << 1
 	or rax, 1 << 2

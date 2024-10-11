@@ -51,7 +51,7 @@ public static class EntryPoint
 		entries[0x00] = new InterruptDescriptor(0x00, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x00, r, e));
 		entries[0x01] = new InterruptDescriptor(0x01, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x01, r, e));
 		entries[0x02] = new InterruptDescriptor(0x02, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x02, r, e));
-		entries[0x03] = new InterruptDescriptor(0x03, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x03, r, e));
+		entries[0x03] = new InterruptDescriptor(0x03, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.ThrowException(r, e));
 		entries[0x04] = new InterruptDescriptor(0x04, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x04, r, e));
 		entries[0x05] = new InterruptDescriptor(0x05, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x05, r, e));
 		entries[0x06] = new InterruptDescriptor(0x06, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x06, r, e));
@@ -62,7 +62,7 @@ public static class EntryPoint
 		entries[0x0b] = new InterruptDescriptor(0x0b, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x0b, r, e));
 		entries[0x0c] = new InterruptDescriptor(0x0c, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x0c, r, e));
 		entries[0x0d] = new InterruptDescriptor(0x0d, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x0d, r, e));
-		entries[0x0e] = new InterruptDescriptor(0x0e, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x0e, r, e));
+		entries[0x0e] = new InterruptDescriptor(0x0e, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.PageFault(r, e));
 		entries[0x0f] = new InterruptDescriptor(0x0f, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Unused(r, e));
 		entries[0x10] = new InterruptDescriptor(0x10, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x10, r, e));
 		entries[0x11] = new InterruptDescriptor(0x11, InterruptFlags.Interrupt | InterruptFlags.Present, (r, e) => DefaultInterruptHandlers.Exception(0x11, r, e));

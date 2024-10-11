@@ -2,6 +2,7 @@ global loadidt
 global getisr
 global setisrhandler
 global getisrhandler
+global loadpanic
 
 extern sendeoi
 extern memcpy
@@ -91,6 +92,12 @@ getisrhandler:
 	mov rax, qword [isrhandler_table + edi * 8]
 	ret
 
+; void void loadpanic(ulong rdi, ulong rsi, ulong rbp, ulong rsp)
+loadpanic:
+	mov rbp, rdx
+	mov rsp, rcx
+	jmp panic
+
 isr_common:
 	mov [registers.rax], rax
 	mov [registers.rbx], rbx
@@ -138,17 +145,8 @@ isr_common:
 	mov qword [rbp], rax
 	cmp rax, 0
 	jnz .callhandler
-	jmp .error_notfound
 
-
-	.error_throwexception:
-	mov rdi, qword [registers.rdi]
-	mov rsi, qword [registers.rsi]
-	mov rsp, [registers.rsp]
-	mov rbp, [registers.rbp]
-	jmp panic
-
-	.error_notfound:
+	.handlernotfound:
 	lea rdi, [rbp + 8]
 	call Int64__ToString
 	mov rdi, rax
@@ -176,10 +174,6 @@ isr_common:
 	mov rdi, rsp
 	mov rsi, qword [rbp + 16]
 	call qword [rbp]
-
-	cmp qword [rbp + 8], 3
-	je .error_throwexception
-
 
 	mov rdi, qword [rbp + 8]
 	call sendeoi

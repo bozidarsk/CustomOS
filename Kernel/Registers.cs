@@ -88,4 +88,24 @@ public readonly struct Registers
 	[FieldOffset(8 * 16)] public readonly ulong rip;
 
 	[FieldOffset(8 * 17)] public readonly ulong rflags;
+
+	public override string ToString() => 
+@$"rax: 0x{(nint)rax/*:x16*/}
+rbx: 0x{(nint)rbx/*:x16*/}
+rcx: 0x{(nint)rcx/*:x16*/}
+rdx: 0x{(nint)rdx/*:x16*/}
+rsi: 0x{(nint)rsi/*:x16*/}
+rdi: 0x{(nint)rdi/*:x16*/}
+rbp: 0x{(nint)rbp/*:x16*/}
+rsp: 0x{(nint)rsp/*:x16*/}
+r8: 0x{(nint)r8/*:x16*/}
+r9: 0x{(nint)r9/*:x16*/}
+r10: 0x{(nint)r10/*:x16*/}
+r11: 0x{(nint)r11/*:x16*/}
+r12: 0x{(nint)r12/*:x16*/}
+r13: 0x{(nint)r13/*:x16*/}
+r14: 0x{(nint)r14/*:x16*/}
+r15: 0x{(nint)r15/*:x16*/}
+rip: 0x{(nint)rip/*:x16*/}
+rflags: 0x{(nint)rflags/*:x16*/}";
 }

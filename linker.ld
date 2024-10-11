@@ -17,7 +17,7 @@ SECTIONS
 		*(.multiboot)
 	} :multiboot
 
-	. = 2 * 4K;
+	. = 512 * 4K; /* first page is not present (page fault triggers before NullReferenceException and StackOverflowException) */
 
 	.stack ALIGN(16) : 
 	{
