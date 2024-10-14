@@ -9,9 +9,9 @@ namespace Kernel.Interrupts;
 
 public static class DefaultInterruptHandlers 
 {
-	[Import] private static extern unsafe void loadpanic(ulong rdi, ulong rsi, ulong rbp, ulong rsp);
+	[Import] private static extern void loadpanic(ulong rdi, ulong rsi, ulong rbp, ulong rsp);
 
-	public static unsafe void ThrowException(Registers registers, ulong error) 
+	public static void ThrowException(Registers registers, ulong error) 
 	{
 		Console.WriteLine("Exception '#BP Breakpoint' occured.");
 		Console.WriteLine(registers);
