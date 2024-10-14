@@ -36,25 +36,54 @@ isr_table:
 section .bss
 
 align 16
+; keep in sync with Kernel/Registers.cs
 registers:
-	.rax: resq 1
-	.rbx: resq 1
-	.rcx: resq 1
-	.rdx: resq 1
-	.rsi: resq 1
-	.rdi: resq 1
-	.rbp: resq 1
-	.rsp: resq 1
-	.r8: resq 1
-	.r9: resq 1
-	.r10: resq 1
-	.r11: resq 1
-	.r12: resq 1
-	.r13: resq 1
-	.r14: resq 1
-	.r15: resq 1
-	.rip: resq 1
-	.rflags: resq 1
+	.rax: resb 8
+	.rbx: resb 8
+	.rcx: resb 8
+	.rdx: resb 8
+	.rsi: resb 8
+	.rdi: resb 8
+	.rbp: resb 8
+	.rsp: resb 8
+	.r8: resb 8
+	.r9: resb 8
+	.r10: resb 8
+	.r11: resb 8
+	.r12: resb 8
+	.r13: resb 8
+	.r14: resb 8
+	.r15: resb 8
+	.rip: resb 8
+	.rflags: resb 8
+	.cs: resb 2
+	.ds: resb 2
+	.ss: resb 2
+	.es: resb 2
+	.fs: resb 2
+	.gs: resb 2
+	.cr0: resb 8
+	.cr2: resb 8
+	.cr3: resb 8
+	.cr4: resb 8
+	.cr8: resb 8
+	.msr: resb 8
+	.xmm0: resb 16
+	.xmm1: resb 16
+	.xmm2: resb 16
+	.xmm3: resb 16
+	.xmm4: resb 16
+	.xmm5: resb 16
+	.xmm6: resb 16
+	.xmm7: resb 16
+	.xmm8: resb 16
+	.xmm9: resb 16
+	.xmm10: resb 16
+	.xmm11: resb 16
+	.xmm12: resb 16
+	.xmm13: resb 16
+	.xmm14: resb 16
+	.xmm15: resb 16
 
 registers_size: equ ($ - registers) + (16 - (($ - registers) % 16)) ; for alignment
 
@@ -138,6 +167,61 @@ isr_common:
 	mov qword [registers.rip], rax
 	mov rax, qword [rbp + 40]
 	mov qword [registers.rflags], rax
+	mov rax, qword [rbp + 32]
+	mov word [registers.cs], ax
+	mov rax, qword [rbp + 56]
+	mov word [registers.ss], ax
+	mov word [registers.ds], ds
+	mov word [registers.es], es
+	mov word [registers.fs], fs
+	mov word [registers.gs], gs
+	mov rax, cr0
+	mov qword [registers.cr0], rax
+	mov rax, cr2
+	mov qword [registers.cr2], rax
+	mov rax, cr3
+	mov qword [registers.cr3], rax
+	mov rax, cr4
+	mov qword [registers.cr4], rax
+	mov rax, cr8
+	mov qword [registers.cr8], rax
+
+	mov rcx, 0xc0000080
+	rdmsr
+	mov qword [registers.msr], rax
+
+	movlpd [registers.xmm0], xmm0
+	movhpd [registers.xmm0 + 8], xmm0
+	movlpd [registers.xmm1], xmm1
+	movhpd [registers.xmm1 + 8], xmm1
+	movlpd [registers.xmm2], xmm2
+	movhpd [registers.xmm2 + 8], xmm2
+	movlpd [registers.xmm3], xmm3
+	movhpd [registers.xmm3 + 8], xmm3
+	movlpd [registers.xmm4], xmm4
+	movhpd [registers.xmm4 + 8], xmm4
+	movlpd [registers.xmm5], xmm5
+	movhpd [registers.xmm5 + 8], xmm5
+	movlpd [registers.xmm6], xmm6
+	movhpd [registers.xmm6 + 8], xmm6
+	movlpd [registers.xmm7], xmm7
+	movhpd [registers.xmm7 + 8], xmm7
+	movlpd [registers.xmm8], xmm8
+	movhpd [registers.xmm8 + 8], xmm8
+	movlpd [registers.xmm9], xmm9
+	movhpd [registers.xmm9 + 8], xmm9
+	movlpd [registers.xmm10], xmm10
+	movhpd [registers.xmm10 + 8], xmm10
+	movlpd [registers.xmm11], xmm11
+	movhpd [registers.xmm11 + 8], xmm11
+	movlpd [registers.xmm12], xmm12
+	movhpd [registers.xmm12 + 8], xmm12
+	movlpd [registers.xmm13], xmm13
+	movhpd [registers.xmm13 + 8], xmm13
+	movlpd [registers.xmm14], xmm14
+	movhpd [registers.xmm14 + 8], xmm14
+	movlpd [registers.xmm15], xmm15
+	movhpd [registers.xmm15 + 8], xmm15
 
 
 	mov rdi, qword [rbp + 8]
